@@ -1,0 +1,110 @@
+{% extends 'apuestas/base.html' %}
+
+{% block titulo_pagina %} - Clasificación{% endblock %}
+
+{% block contenido %}
+
+<div class="d-flex justify-content-end gap-2 mb-3">
+
+    <a href="{% url 'exportar_clasificacion_pdf' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-file-earmark-pdf"></i>
+        Exportar PDF
+    </a>
+
+    <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </a>
+
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover align-middle table-sm apuestas-table">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Pos</th>
+                        <th>Nombre</th>
+                        <th>E1</th>
+                        <th>E2</th>
+                        <th>E3</th>
+                        <th>E4</th>
+                        <th>E5</th>
+                        <th>E6</th>
+                        <th>E7</th>
+                        <th>E8</th>
+                        <th>E9</th>
+                        <th>E10</th>
+                        <th>E11</th>
+                        <th>E12</th>
+                        <th>Goleador</th>
+                        <th>Puntos</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in clasificacion %}
+                        <tr>
+                            <td class="fw-bold">
+                                {% if forloop.counter == 1 %}
+                                    🥇
+                                {% elif forloop.counter == 2 %}
+                                    🥈
+                                {% elif forloop.counter == 3 %}
+                                    🥉
+                                {% else %}
+                                    {{ forloop.counter }}
+                                {% endif %}
+                            </td>
+
+                            <td class="fw-bold text-start">
+                                {{ item.apuesta.nombre }}
+                            </td>
+
+                            {% for equipo in item.equipos %}
+                                <td>
+                                    <span
+                                        class="equipo-mini"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-html="true"
+                                        data-bs-placement="top"
+                                        title="{{ equipo.tooltip }}"
+                                    >
+                                        <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
+                                        {{ equipo.codigo }}
+                                    </span>
+                                </td>
+                            {% endfor %}
+
+                            <td class="fw-semibold">
+                                <span
+                                    data-bs-toggle="tooltip"
+                                    data-bs-html="true"
+                                    data-bs-placement="top"
+                                    title="{{ item.tooltip_goleador }}"
+                                >
+                                    {{ item.apuesta.goleador }}
+                                </span>
+                            </td>
+
+                            <td class="fw-bold text-primary">
+                                {{ item.puntos_display }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="16" class="text-center text-muted">
+                                No hay apuestas todavía.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

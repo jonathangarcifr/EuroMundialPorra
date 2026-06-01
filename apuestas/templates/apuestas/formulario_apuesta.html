@@ -1,0 +1,271 @@
+{% extends 'apuestas/base.html' %}
+
+{% block titulo_pagina %} - Apuesta{% endblock %}
+
+{% block contenido %}
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        {% if form.errors %}
+        <div class="modal fade" id="erroresModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Revisa la apuesta
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>
+                                        <strong>{{ field.label }}:</strong>
+                                        {{ error }}
+                                    </li>
+                                {% endfor %}
+                            {% endfor %}
+
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Cerrar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const erroresModal = new bootstrap.Modal(document.getElementById("erroresModal"));
+                erroresModal.show();
+            });
+        </script>
+        {% endif %}
+
+        <form method="post" class="form-apuesta">
+            {% csrf_token %}
+
+<!--        <h6 class="mb-3">
+                <i class="bi bi-person-fill"></i>
+                Datos del participante
+            </h6>
+        -->
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-5">
+                    <label class="form-label">{{ form.nombre.label }}</label>
+                    {{ form.nombre }}
+                </div>
+
+                <div class="col-md-5">
+                    <label class="form-label">{{ form.email.label }}</label>
+                    {{ form.email }}
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">{{ form.pagado.label }}</label>
+                    <div class="pagado-box">
+                        {{ form.pagado }}
+                    </div>
+                </div>
+            </div>
+
+<!--        <h6 class="mb-3">
+                <i class="bi bi-shield-fill"></i>
+                Equipos seleccionados
+            </h6>
+        -->
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <div class="bombo-card">
+                        <h6>Bombo 1</h6>
+                        <p>Elija dos selecciones</p>
+                        <div class="bombo-grid" data-max="2">
+                            {{ form.bombo_1 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="bombo-card">
+                        <h6>Bombo 2</h6>
+                        <p>Elija dos selecciones</p>
+                        <div class="bombo-grid" data-max="2">
+                            {{ form.bombo_2 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="bombo-card">
+                        <h6>Bombo 3</h6>
+                        <p>Elija dos selecciones</p>
+                        <div class="bombo-grid" data-max="2">
+                            {{ form.bombo_3 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="bombo-card">
+                        <h6>Bombo 4</h6>
+                        <p>Elija dos selecciones</p>
+                        <div class="bombo-grid" data-max="2">
+                            {{ form.bombo_4 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="bombo-card">
+                        <h6>Bombo 5</h6>
+                        <p>Elija dos selecciones</p>
+                        <div class="bombo-grid" data-max="2">
+                            {{ form.bombo_5 }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="bombo-card">
+                        <h6>Bombo 6</h6>
+                        <p>Elija dos selecciones</p>
+                        <div class="bombo-grid" data-max="2">
+                            {{ form.bombo_6 }}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+<!--        <h6 class="mt-4 mb-3">
+                <i class="bi bi-person-arms-up"></i>
+                Goleador
+            </h6>
+        -->
+            <br>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.goleador.label }}</label>
+                    {{ form.goleador }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.equipo_goleador.label }}</label>
+                    {{ form.equipo_goleador }}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-save"></i>
+                    Guardar
+                </button>
+
+                <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i>
+                    Volver
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".bombo-grid").forEach(function (grid) {
+            const max = parseInt(grid.dataset.max || "2");
+            const checks = grid.querySelectorAll("input[type='checkbox']");
+
+            function actualizarChecks() {
+                const seleccionados = Array.from(checks).filter(check => check.checked).length;
+
+                checks.forEach(function (check) {
+                    if (!check.checked) {
+                        check.disabled = seleccionados >= max;
+                    }
+                });
+            }
+
+            checks.forEach(function (check) {
+                check.addEventListener("change", actualizarChecks);
+            });
+
+            actualizarChecks();
+        });
+    });
+</script>
+
+{% endblock %}
+
+<script>
+    function bloquearEquipoRepetido(campoAId, campoBId) {
+        const campoA = document.getElementById(campoAId);
+        const campoB = document.getElementById(campoBId);
+
+        if (!campoA || !campoB) {
+            return;
+        }
+
+        function actualizarOpciones() {
+            const valorA = campoA.value;
+            const valorB = campoB.value;
+
+            Array.from(campoA.options).forEach(option => {
+                option.disabled = false;
+            });
+
+            Array.from(campoB.options).forEach(option => {
+                option.disabled = false;
+            });
+
+            if (valorA) {
+                Array.from(campoB.options).forEach(option => {
+                    if (option.value === valorA) {
+                        option.disabled = true;
+                    }
+                });
+            }
+
+            if (valorB) {
+                Array.from(campoA.options).forEach(option => {
+                    if (option.value === valorB) {
+                        option.disabled = true;
+                    }
+                });
+            }
+        }
+
+        campoA.addEventListener("change", actualizarOpciones);
+        campoB.addEventListener("change", actualizarOpciones);
+
+        actualizarOpciones();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        bloquearEquipoRepetido("id_equipo_1", "id_equipo_2");
+        bloquearEquipoRepetido("id_equipo_3", "id_equipo_4");
+        bloquearEquipoRepetido("id_equipo_5", "id_equipo_6");
+        bloquearEquipoRepetido("id_equipo_7", "id_equipo_8");
+        bloquearEquipoRepetido("id_equipo_9", "id_equipo_10");
+        bloquearEquipoRepetido("id_equipo_11", "id_equipo_12");
+    });
+</script>

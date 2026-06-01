@@ -1,0 +1,113 @@
+{% extends 'apuestas/base.html' %}
+
+{% block titulo_pagina %} - Apuestas{% endblock %}
+
+{% block contenido %}
+
+<div class="d-flex justify-content-end gap-2 mb-3">
+
+    <a href="{% url 'nueva_apuesta' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle"></i>
+        Nueva apuesta
+    </a>
+
+    <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </a>
+
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="leyenda-grid">
+            {% for equipo in leyenda %}
+                <div class="leyenda-item" title="{{ equipo.nombre }}">
+                    <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
+                    <span class="leyenda-nombre">{{ equipo.nombre }}</span>
+                    <span class="leyenda-codigo">{{ equipo.codigo }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover align-middle table-sm apuestas-table">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Pagado</th>
+                        <th>E1</th>
+                        <th>E2</th>
+                        <th>E3</th>
+                        <th>E4</th>
+                        <th>E5</th>
+                        <th>E6</th>
+                        <th>E7</th>
+                        <th>E8</th>
+                        <th>E9</th>
+                        <th>E10</th>
+                        <th>E11</th>
+                        <th>E12</th>
+                        <th>Goleador</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in apuestas_preparadas %}
+                        {% with apuesta=item.apuesta %}
+                        <tr>
+                            <td class="fw-bold text-start">{{ apuesta.nombre }}</td>
+
+                            <td>
+                                {% if apuesta.pagado %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i>
+                                        Sí
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i>
+                                        No
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            {% for equipo in item.equipos %}
+                                <td>
+                                    <span class="equipo-mini" title="{{ equipo.nombre }}">
+                                        <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
+                                        {{ equipo.codigo }}
+                                    </span>
+                                </td>
+                            {% endfor %}
+
+                            <td class="fw-semibold">{{ apuesta.goleador }}</td>
+
+                            <td>
+                                <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-sm btn-outline-primary edit-mini" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="16" class="text-center text-muted">
+                                No hay apuestas todavía.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
