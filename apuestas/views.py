@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.paginator import Paginator
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponse
 from .models import Partido, Apuesta, GoleadorPartido
 from .forms import ApuestaForm, PartidoForm
-from django.http import HttpResponse
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
@@ -14,6 +15,7 @@ def inicio(request):
     return render(request, "apuestas/inicio.html")
 
 
+@staff_member_required
 def nueva_apuesta(request):
     if request.method == "POST":
         form = ApuestaForm(request.POST)
@@ -65,6 +67,7 @@ def ver_apuestas(request):
     )
 
 
+@staff_member_required
 def editar_apuesta(request, apuesta_id):
     apuesta = get_object_or_404(Apuesta, id=apuesta_id)
 
@@ -81,6 +84,9 @@ def editar_apuesta(request, apuesta_id):
 
 def resultados(request):
     partido_form = PartidoForm()
+
+    if request.method == "POST" and not request.user.is_staff:
+        return redirect("resultados")
 
     if request.method == "POST":
         tipo_formulario = request.POST.get("tipo_formulario")
@@ -423,6 +429,7 @@ def calcular_puntos_apuesta(apuesta):
         detalle_equipos,
     )
 
+@staff_member_required
 def exportar_clasificacion_pdf(request):
     clasificacion_data = obtener_datos_clasificacion()
 

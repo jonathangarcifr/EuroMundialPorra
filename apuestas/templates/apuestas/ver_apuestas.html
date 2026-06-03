@@ -6,10 +6,12 @@
 
 <div class="d-flex justify-content-end gap-2 mb-3">
 
+    {% if request.user.is_staff %}
     <a href="{% url 'nueva_apuesta' %}" class="btn btn-primary btn-sm">
         <i class="bi bi-plus-circle"></i>
         Nueva apuesta
     </a>
+    {% endif %}
 
     <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
         <i class="bi bi-arrow-left"></i>
@@ -88,12 +90,16 @@
                             {% endfor %}
 
                             <td class="fw-semibold">{{ apuesta.goleador }}</td>
-
-                            <td>
-                                <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-sm btn-outline-primary edit-mini" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            </td>
+                            
+                            {% if request.user.is_staff %}
+                                <td>
+                                    <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-sm btn-outline-primary edit-mini" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                                {% else %}
+                                <td></td>
+                            {% endif %}
                         </tr>
                         {% endwith %}
                     {% empty %}

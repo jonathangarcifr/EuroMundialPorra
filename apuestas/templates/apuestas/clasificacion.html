@@ -6,10 +6,12 @@
 
 <div class="d-flex justify-content-end gap-2 mb-3">
 
+    {% if request.user.is_staff %}
     <a href="{% url 'exportar_clasificacion_pdf' %}" class="btn btn-primary btn-sm">
         <i class="bi bi-file-earmark-pdf"></i>
         Exportar PDF
     </a>
+    {% endif %}
 
     <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
         <i class="bi bi-arrow-left"></i>
