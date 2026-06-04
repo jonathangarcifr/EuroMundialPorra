@@ -325,11 +325,16 @@ def clasificacion(request):
         clasificacion_data.append({
             "apuesta": apuesta,
             "equipos": equipos,
+            "equipo_goleador_info": obtener_info_equipo(
+                apuesta.equipo_goleador
+            ),
             "puntos_equipos": puntos_equipos,
             "puntos_goleador": puntos_goleador,
             "puntos_totales": puntos_totales,
-            "puntos_display": (f"{puntos_equipos + puntos_goleador}" f".{puntos_goleador:02d}"
-    ),
+            "puntos_display": (
+                f"{puntos_equipos + puntos_goleador}" 
+                f".{puntos_goleador:02d}"
+             ),
             "tooltip_goleador": tooltip_goleador,
         })
 

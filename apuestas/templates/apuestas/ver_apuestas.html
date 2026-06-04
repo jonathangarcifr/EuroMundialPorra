@@ -137,17 +137,31 @@
         <div class="card shadow-sm mb-3 apuesta-mobile-card" data-nombre="{{ apuesta.nombre|lower }}">
             <div class="card-body">
 
-                <div class="apuesta-mobile-header">
+                <div class="text-center">
+
                     <div class="apuesta-mobile-nombre">
                         {{ apuesta.nombre }}
                     </div>
 
-                    <div class="apuesta-mobile-goleador">
-                        {{ apuesta.goleador }}<br>
-                        <img src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png">
-                        {{ item.equipo_goleador_info.codigo }}
-                    </div>
                 </div>
+
+                <hr class="my-2">
+
+                <div class="text-center small fw-semibold">
+
+                    {{ apuesta.goleador }}
+
+                    <span class="ms-1">
+                        <img
+                            src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
+                            style="width:18px;height:12px;"
+                        >
+                        {{ item.equipo_goleador_info.codigo }}
+                    </span>
+
+                </div>
+
+                <hr class="my-2">
 
                 <div class="apuesta-mobile-equipos">
                     {% for equipo in item.equipos %}
@@ -157,6 +171,8 @@
                         </div>
                     {% endfor %}
                 </div>
+
+                <hr class="my-2">
 
                 {% if request.user.is_staff %}
                     <div class="text-end mt-2">

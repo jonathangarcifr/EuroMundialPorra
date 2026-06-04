@@ -127,16 +127,42 @@
         <div class="card shadow-sm mb-3 clasificacion-mobile-card" data-nombre="{{ item.apuesta.nombre|lower }}">
             <div class="card-body">
 
-                <div class="apuesta-mobile-header">
+                <div class="text-center">
+
                     <div class="apuesta-mobile-nombre">
-                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                        {% if forloop.counter == 1 %}
+                            🥇
+                        {% elif forloop.counter == 2 %}
+                            🥈
+                        {% elif forloop.counter == 3 %}
+                            🥉
+                        {% else %}
+                            {{ forloop.counter }}
+                        {% endif %}
                         {{ item.apuesta.nombre }}
                     </div>
 
-                    <div class="fw-bold text-primary">
-                        {{ item.puntos_display }}
-                    </div>
                 </div>
+
+                <hr class="my-2">
+
+                <div class="text-center small fw-semibold">
+
+                    {{ item.apuesta.goleador }}
+
+                    {% if item.equipo_goleador_info %}
+                        <span class="ms-1">
+                            <img
+                                src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
+                                style="width:18px;height:12px;"
+                            >
+                            {{ item.equipo_goleador_info.codigo }}
+                        </span>
+                    {% endif %}
+
+                </div>
+
+                <hr class="my-2">
 
                 <div class="apuesta-mobile-equipos">
                     {% for equipo in item.equipos %}
@@ -147,9 +173,12 @@
                     {% endfor %}
                 </div>
 
-                <div class="text-center mt-2">
-                    <strong>Goleador:</strong>
-                    {{ item.apuesta.goleador }}
+                <hr class="my-2">
+
+                <div class="text-center">
+                    <span class="fw-bold text-primary">
+                        {{ item.puntos_display }} puntos
+                    </span>
                 </div>
 
             </div>
