@@ -20,7 +20,7 @@
 
 </div>
 
-<div class="card shadow-sm mb-3">
+<div class="card shadow-sm mb-3 leyenda-card">
     <div class="card-body py-2">
         <div class="leyenda-grid">
             {% for equipo in leyenda %}
@@ -34,7 +34,18 @@
     </div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        <input
+            type="text"
+            id="buscadorApuestas"
+            class="form-control"
+            placeholder="Buscar apuesta por nombre..."
+        >
+    </div>
+</div>
+
+<div class="card shadow-sm apuestas-table-card">
     <div class="card-body">
 
         <div class="table-responsive">
@@ -119,5 +130,97 @@
 
     </div>
 </div>
+
+<div class="apuestas-mobile">
+    {% for item in apuestas_preparadas %}
+        {% with apuesta=item.apuesta %}
+        <div class="card shadow-sm mb-3 apuesta-mobile-card" data-nombre="{{ apuesta.nombre|lower }}">
+            <div class="card-body p-2">
+
+                <div class="row border-bottom py-2">
+                    <div class="col-8 fw-bold text-center">{{ apuesta.nombre }}</div>
+
+                    {% if request.user.is_staff %}
+                    <div class="col-4 text-center">
+                        {% if apuesta.pagado %}
+                            <span class="badge bg-success">Sí</span>
+                        {% else %}
+                            <span class="badge bg-danger">No</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="row border-bottom py-2">
+                    <div class="col-12 text-center">
+                        {% for equipo in item.equipos|slice:":6" %}
+                            <span class="equipo-mini me-2 mb-1">
+                                <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
+                                {{ equipo.codigo }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row border-bottom py-2">
+                    <div class="col-12 text-center">
+                        {% for equipo in item.equipos|slice:"6:12" %}
+                            <span class="equipo-mini me-2 mb-1">
+                                <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
+                                {{ equipo.codigo }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row py-2">
+                    <div class="col-6 text-center">
+                        <strong>Goleador</strong><br>
+                        {{ apuesta.goleador }}
+                    </div>
+
+                    <div class="col-6 text-center">
+                        <strong>Selección</strong><br>
+                        {{ apuesta.equipo_goleador }}
+                    </div>
+                </div>
+
+                {% if request.user.is_staff %}
+                <div class="text-end">
+                    <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+        {% endwith %}
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const buscador = document.getElementById("buscadorApuestas");
+
+    if (!buscador) return;
+
+    buscador.addEventListener("input", function () {
+        const texto = buscador.value.toLowerCase();
+
+        document.querySelectorAll(".apuesta-mobile-card").forEach(function (card) {
+            const nombre = card.dataset.nombre || "";
+            card.style.display = nombre.includes(texto) ? "" : "none";
+        });
+
+        document.querySelectorAll(".apuestas-table tbody tr").forEach(function (row) {
+            const nombre = row.querySelector("td");
+            if (!nombre) return;
+
+            row.style.display = nombre.textContent.toLowerCase().includes(texto) ? "" : "none";
+        });
+    });
+});
+</script>
 
 {% endblock %}
