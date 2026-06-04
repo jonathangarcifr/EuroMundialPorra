@@ -98,13 +98,11 @@
                             <td class="fw-semibold">{{ apuesta.goleador }}</td>
                             
                             {% if request.user.is_staff %}
-                                <td>
-                                    <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-sm btn-outline-primary edit-mini" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                </td>
-                                {% else %}
-                                <td></td>
+                            <td>
+                                <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-sm btn-outline-primary edit-mini" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
                             {% endif %}
                         </tr>
                         {% endwith %}
