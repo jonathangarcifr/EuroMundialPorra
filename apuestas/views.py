@@ -82,6 +82,118 @@ def editar_apuesta(request, apuesta_id):
     return render(request, "apuestas/formulario_apuesta.html", {"form": form})
 
 
+def sincronizar_goleadores_partidos():
+    apuestas_goleadores = list(
+        Apuesta.objects
+        .exclude(goleador="")
+        .exclude(equipo_goleador="")
+        .values("goleador", "equipo_goleador")
+        .distinct()
+    )
+
+    partidos = list(
+        Partido.objects
+        .all()
+        .only("id", "equipo_local", "equipo_visitante")
+    )
+
+    existentes = set(
+        GoleadorPartido.objects.values_list(
+            "partido_id",
+            "jugador",
+            "equipo"
+        )
+    )
+
+    nuevos = []
+    nuevos_keys = set()
+
+    for partido in partidos:
+        equipos_partido = [partido.equipo_local, partido.equipo_visitante]
+
+        for apuesta in apuestas_goleadores:
+            jugador = apuesta["goleador"]
+            equipo = apuesta["equipo_goleador"]
+
+            if equipo not in equipos_partido:
+                continue
+
+            key = (partido.id, jugador, equipo)
+
+            if key in existentes or key in nuevos_keys:
+                continue
+
+            nuevos.append(
+                GoleadorPartido(
+                    partido=partido,
+                    jugador=jugador,
+                    equipo=equipo,
+                    goles=0,
+                )
+            )
+
+            nuevos_keys.add(key)
+
+    if nuevos:
+        GoleadorPartido.objects.bulk_create(nuevos)
+
+
+def sincronizar_goleadores_partidos():
+    apuestas_goleadores = list(
+        Apuesta.objects
+        .exclude(goleador="")
+        .exclude(equipo_goleador="")
+        .values("goleador", "equipo_goleador")
+        .distinct()
+    )
+
+    partidos = list(
+        Partido.objects
+        .all()
+        .only("id", "equipo_local", "equipo_visitante")
+    )
+
+    existentes = set(
+        GoleadorPartido.objects.values_list(
+            "partido_id",
+            "jugador",
+            "equipo"
+        )
+    )
+
+    nuevos = []
+    nuevos_keys = set()
+
+    for partido in partidos:
+        equipos_partido = [partido.equipo_local, partido.equipo_visitante]
+
+        for apuesta in apuestas_goleadores:
+            jugador = apuesta["goleador"]
+            equipo = apuesta["equipo_goleador"]
+
+            if equipo not in equipos_partido:
+                continue
+
+            key = (partido.id, jugador, equipo)
+
+            if key in existentes or key in nuevos_keys:
+                continue
+
+            nuevos.append(
+                GoleadorPartido(
+                    partido=partido,
+                    jugador=jugador,
+                    equipo=equipo,
+                    goles=0,
+                )
+            )
+
+            nuevos_keys.add(key)
+
+    if nuevos:
+        GoleadorPartido.objects.bulk_create(nuevos)
+
+
 def resultados(request):
     partido_form = PartidoForm()
 
@@ -131,90 +243,67 @@ def resultados(request):
 
                 return redirect(f"{reverse('resultados')}?fase={partido.fase}")
 
-            partidos_sin_goleadores = (
-            Partido.objects
-            .filter(goleadores__isnull=True)
-            .order_by("fecha_partido", "id")
-        )
+            sincronizar_goleadores_partidos()
 
-        for partido in partidos_sin_goleadores:
-            equipos_partido = [partido.equipo_local, partido.equipo_visitante]
+            jornadas = []
 
-            apuestas_goleadores = (
-                Apuesta.objects
-                .filter(equipo_goleador__in=equipos_partido)
-                .values("goleador", "equipo_goleador")
-                .distinct()
-                .order_by("equipo_goleador", "goleador")
-            )
-
-            for apuesta in apuestas_goleadores:
-                GoleadorPartido.objects.get_or_create(
-                    partido=partido,
-                    jugador=apuesta["goleador"],
-                    equipo=apuesta["equipo_goleador"],
-                    defaults={"goles": 0}
+            for codigo_fase, nombre_fase in Partido.FASES:
+                partidos_fase = (
+                    Partido.objects
+                    .filter(fase=codigo_fase)
+                    .prefetch_related(
+                        Prefetch(
+                            "goleadores",
+                            queryset=GoleadorPartido.objects.order_by("jugador"),
+                            to_attr="goleadores_prefetch"
+                        )
+                    )
+                    .order_by("fecha_partido", "id")
                 )
 
-    jornadas = []
+                partidos_preparados = []
 
-    for codigo_fase, nombre_fase in Partido.FASES:
-        partidos_fase = (
-            Partido.objects
-            .filter(fase=codigo_fase)
-            .prefetch_related(
-                Prefetch(
-                    "goleadores",
-                    queryset=GoleadorPartido.objects.order_by("jugador"),
-                    to_attr="goleadores_prefetch"
-                )
+                for partido in partidos_fase:
+                    goleadores_local = [
+                        g for g in partido.goleadores_prefetch
+                        if g.equipo == partido.equipo_local
+                    ]
+
+                    goleadores_visitante = [
+                        g for g in partido.goleadores_prefetch
+                        if g.equipo == partido.equipo_visitante
+                    ]
+
+                    partidos_preparados.append({
+                        "partido": partido,
+                        "local_info": obtener_info_equipo(partido.equipo_local),
+                        "visitante_info": obtener_info_equipo(partido.equipo_visitante),
+                        "goleadores_local": goleadores_local,
+                        "goleadores_visitante": goleadores_visitante,
+                        "total_goleadores": len(goleadores_local) + len(goleadores_visitante),
+                    })
+
+                if partidos_preparados:
+                    jornadas.append({
+                        "codigo": codigo_fase,
+                        "nombre": nombre_fase,
+                        "partidos": partidos_preparados,
+                    })
+
+            fase_activa = request.GET.get("fase")
+
+            if not fase_activa and jornadas:
+                fase_activa = jornadas[0]["codigo"]
+
+            return render(
+                request,
+                "apuestas/resultados.html",
+                {
+                    "jornadas": jornadas,
+                    "partido_form": partido_form,
+                    "fase_activa": fase_activa,
+                }
             )
-            .order_by("fecha_partido", "id")
-        )
-
-        partidos_preparados = []
-
-        for partido in partidos_fase:
-            goleadores_local = [
-                g for g in partido.goleadores_prefetch
-                if g.equipo == partido.equipo_local
-            ]
-
-            goleadores_visitante = [
-                g for g in partido.goleadores_prefetch
-                if g.equipo == partido.equipo_visitante
-            ]
-
-            partidos_preparados.append({
-                "partido": partido,
-                "local_info": obtener_info_equipo(partido.equipo_local),
-                "visitante_info": obtener_info_equipo(partido.equipo_visitante),
-                "goleadores_local": goleadores_local,
-                "goleadores_visitante": goleadores_visitante,
-                "total_goleadores": len(goleadores_local) + len(goleadores_visitante),
-            })
-
-        if partidos_preparados:
-            jornadas.append({
-                "codigo": codigo_fase,
-                "nombre": nombre_fase,
-                "partidos": partidos_preparados,
-            })
-
-    fase_activa = request.GET.get("fase")
-
-    if not fase_activa and jornadas:
-        fase_activa = jornadas[0]["codigo"]
-
-    return render(
-        request,
-        "apuestas/resultados.html",
-        {
-            "jornadas": jornadas,
-            "partido_form": partido_form,
-            "fase_activa": fase_activa,
-        }
-    )
 
 
 def clasificacion(request):
