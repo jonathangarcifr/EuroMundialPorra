@@ -170,6 +170,8 @@ def resultados(request):
 
             partidos_preparados.append({
                 "partido": partido,
+                "local_info": obtener_info_equipo(partido.equipo_local),
+                "visitante_info": obtener_info_equipo(partido.equipo_visitante),
                 "goleadores_local": goleadores_local,
                 "goleadores_visitante": goleadores_visitante,
                 "total_goleadores": goleadores_local.count() + goleadores_visitante.count(),

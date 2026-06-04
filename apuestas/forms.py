@@ -225,6 +225,16 @@ class PartidoForm(forms.ModelForm):
         label="Equipo 2"
     )
 
+    GRUPOS = [("", "Elija un grupo")] + [
+        (f"Grupo {letra}", f"Grupo {letra}")
+        for letra in "ABCDEFGHIJKL"
+    ]
+
+    grupo = forms.ChoiceField(
+        choices=GRUPOS,
+        label="Grupo"
+    )
+
     class Meta:
         model = Partido
         fields = [

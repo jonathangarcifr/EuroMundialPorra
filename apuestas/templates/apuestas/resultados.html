@@ -2,15 +2,10 @@
 {% block titulo_pagina %} - Resultados{% endblock %}
 
 {% block contenido %}
-<div class="d-flex justify-content-end gap-2 mb-3">
 
+<div class="d-flex justify-content-end gap-2 mb-3">
     {% if request.user.is_staff %}
-    <button
-        type="button"
-        class="btn btn-primary btn-sm"
-        data-bs-toggle="modal"
-        data-bs-target="#nuevoPartidoModal"
-    >
+    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#nuevoPartidoModal">
         <i class="bi bi-plus-circle"></i>
         Nuevo partido
     </button>
@@ -26,10 +21,8 @@
 <div class="modal fade" id="nuevoPartidoModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <form method="post">
                 {% csrf_token %}
-
                 <input type="hidden" name="tipo_formulario" value="nuevo_partido">
 
                 <div class="modal-header bg-primary text-white">
@@ -41,7 +34,6 @@
                 </div>
 
                 <div class="modal-body">
-
                     <div class="mb-3">
                         <label class="form-label">{{ partido_form.fase.label }}</label>
                         {{ partido_form.fase }}
@@ -72,22 +64,19 @@
                             Revisa los datos del partido.
                         </div>
                     {% endif %}
-
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
                         Cancelar
                     </button>
 
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary btn-sm">
                         <i class="bi bi-save"></i>
                         Guardar
                     </button>
                 </div>
-
             </form>
-
         </div>
     </div>
 </div>
@@ -127,7 +116,6 @@
 
                             <form method="post">
                                 {% csrf_token %}
-
                                 <input type="hidden" name="partido_id" value="{{ partido.id }}">
 
                                 <div class="match-top-info">
@@ -158,6 +146,11 @@
 
                                 <div class="match-score-line mb-3">
                                     <div class="team-name team-left" title="{{ partido.equipo_local }}">
+                                        <img
+                                            src="https://flagcdn.com/w20/{{ item.local_info.flag }}.png"
+                                            alt="{{ partido.equipo_local }}"
+                                            class="flag-match"
+                                        >
                                         {{ partido.equipo_local }}
                                     </div>
 
@@ -183,6 +176,11 @@
 
                                     <div class="team-name team-right" title="{{ partido.equipo_visitante }}">
                                         {{ partido.equipo_visitante }}
+                                        <img
+                                            src="https://flagcdn.com/w20/{{ item.visitante_info.flag }}.png"
+                                            alt="{{ partido.equipo_visitante }}"
+                                            class="flag-match"
+                                        >
                                     </div>
                                 </div>
 
@@ -232,9 +230,10 @@
                                                     >
                                                 </div>
                                             {% empty %}
-                                                <p class="sin-goleadores mb-0">
-                                                    Sin goleadores
-                                                </p>
+                                                <div class="scorer-line">
+                                                    <span class="sin-goleadores">Sin goleadores</span>
+                                                    <span></span>
+                                                </div>
                                             {% endfor %}
                                         </div>
 
@@ -268,9 +267,9 @@
 
                                     </div>
                                 </div>
-                                
+
                                 {% if request.user.is_staff %}
-                                    <div class="d-flex gap-2 match-actions">
+                                <div class="d-flex gap-2 match-actions">
                                     {% if not partido.jugado %}
                                         <button type="submit" name="accion" value="confirmar" class="btn btn-primary btn-sm flex-fill">
                                             <i class="bi bi-save"></i>
@@ -287,8 +286,8 @@
                                             Editar
                                         </button>
                                     {% endif %}
+                                </div>
                                 {% endif %}
-                            </div>
 
                             </form>
 
