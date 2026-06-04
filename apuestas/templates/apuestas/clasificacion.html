@@ -20,93 +20,165 @@
 
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body">
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        <input
+            type="text"
+            id="buscadorClasificacion"
+            class="form-control"
+            placeholder="Buscar participante..."
+        >
+    </div>
+</div>
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped table-hover align-middle table-sm apuestas-table">
-                <thead class="table-primary">
-                    <tr>
-                        <th>Pos</th>
-                        <th>Nombre</th>
-                        <th>E1</th>
-                        <th>E2</th>
-                        <th>E3</th>
-                        <th>E4</th>
-                        <th>E5</th>
-                        <th>E6</th>
-                        <th>E7</th>
-                        <th>E8</th>
-                        <th>E9</th>
-                        <th>E10</th>
-                        <th>E11</th>
-                        <th>E12</th>
-                        <th>Goleador</th>
-                        <th>Puntos</th>
-                    </tr>
-                </thead>
+<div class="card shadow-sm clasificacion-table-card">
+    <div class="card shadow-sm">
+        <div class="card-body">
 
-                <tbody>
-                    {% for item in clasificacion %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover align-middle table-sm apuestas-table">
+                    <thead class="table-primary">
                         <tr>
-                            <td class="fw-bold">
-                                {% if forloop.counter == 1 %}
-                                    🥇
-                                {% elif forloop.counter == 2 %}
-                                    🥈
-                                {% elif forloop.counter == 3 %}
-                                    🥉
-                                {% else %}
-                                    {{ forloop.counter }}
-                                {% endif %}
-                            </td>
+                            <th>Pos</th>
+                            <th>Nombre</th>
+                            <th>E1</th>
+                            <th>E2</th>
+                            <th>E3</th>
+                            <th>E4</th>
+                            <th>E5</th>
+                            <th>E6</th>
+                            <th>E7</th>
+                            <th>E8</th>
+                            <th>E9</th>
+                            <th>E10</th>
+                            <th>E11</th>
+                            <th>E12</th>
+                            <th>Goleador</th>
+                            <th>Puntos</th>
+                        </tr>
+                    </thead>
 
-                            <td class="fw-bold text-start">
-                                {{ item.apuesta.nombre }}
-                            </td>
+                    <tbody>
+                        {% for item in clasificacion %}
+                            <tr>
+                                <td class="fw-bold">
+                                    {% if forloop.counter == 1 %}
+                                        🥇
+                                    {% elif forloop.counter == 2 %}
+                                        🥈
+                                    {% elif forloop.counter == 3 %}
+                                        🥉
+                                    {% else %}
+                                        {{ forloop.counter }}
+                                    {% endif %}
+                                </td>
 
-                            {% for equipo in item.equipos %}
-                                <td>
+                                <td class="fw-bold text-start">
+                                    {{ item.apuesta.nombre }}
+                                </td>
+
+                                {% for equipo in item.equipos %}
+                                    <td>
+                                        <span
+                                            class="equipo-mini"
+                                            data-bs-toggle="tooltip"
+                                            data-bs-html="true"
+                                            data-bs-placement="top"
+                                            title="{{ equipo.tooltip }}"
+                                        >
+                                            <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
+                                            {{ equipo.codigo }}
+                                        </span>
+                                    </td>
+                                {% endfor %}
+
+                                <td class="fw-semibold">
                                     <span
-                                        class="equipo-mini"
                                         data-bs-toggle="tooltip"
                                         data-bs-html="true"
                                         data-bs-placement="top"
-                                        title="{{ equipo.tooltip }}"
+                                        title="{{ item.tooltip_goleador }}"
                                     >
-                                        <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
-                                        {{ equipo.codigo }}
+                                        {{ item.apuesta.goleador }}
                                     </span>
                                 </td>
-                            {% endfor %}
 
-                            <td class="fw-semibold">
-                                <span
-                                    data-bs-toggle="tooltip"
-                                    data-bs-html="true"
-                                    data-bs-placement="top"
-                                    title="{{ item.tooltip_goleador }}"
-                                >
-                                    {{ item.apuesta.goleador }}
-                                </span>
-                            </td>
+                                <td class="fw-bold text-primary">
+                                    {{ item.puntos_display }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="16" class="text-center text-muted">
+                                    No hay apuestas todavía.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-                            <td class="fw-bold text-primary">
-                                {{ item.puntos_display }}
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="16" class="text-center text-muted">
-                                No hay apuestas todavía.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
-
     </div>
 </div>
+
+<div class="clasificacion-mobile">
+    {% for item in clasificacion %}
+        <div class="card shadow-sm mb-3 clasificacion-mobile-card" data-nombre="{{ item.apuesta.nombre|lower }}">
+            <div class="card-body">
+
+                <div class="apuesta-mobile-header">
+                    <div class="apuesta-mobile-nombre">
+                        {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                        {{ item.apuesta.nombre }}
+                    </div>
+
+                    <div class="fw-bold text-primary">
+                        {{ item.puntos_display }}
+                    </div>
+                </div>
+
+                <div class="apuesta-mobile-equipos">
+                    {% for equipo in item.equipos %}
+                        <div class="apuesta-mobile-equipo">
+                            <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
+                            {{ equipo.codigo }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="text-center mt-2">
+                    <strong>Goleador:</strong>
+                    {{ item.apuesta.goleador }}
+                </div>
+
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const buscador = document.getElementById("buscadorClasificacion");
+
+    if (!buscador) return;
+
+    buscador.addEventListener("input", function () {
+        const texto = buscador.value.toLowerCase();
+
+        document.querySelectorAll(".clasificacion-mobile-card").forEach(function (card) {
+            const nombre = card.dataset.nombre || "";
+            card.style.display = nombre.includes(texto) ? "" : "none";
+        });
+
+        document.querySelectorAll(".clasificacion-table-card tbody tr").forEach(function (row) {
+            const nombre = row.querySelector("td:nth-child(2)");
+            if (!nombre) return;
+
+            row.style.display = nombre.textContent.toLowerCase().includes(texto) ? "" : "none";
+        });
+    });
+});
+</script>
 
 {% endblock %}

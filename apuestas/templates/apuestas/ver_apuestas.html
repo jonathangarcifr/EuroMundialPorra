@@ -135,68 +135,41 @@
     {% for item in apuestas_preparadas %}
         {% with apuesta=item.apuesta %}
         <div class="card shadow-sm mb-3 apuesta-mobile-card" data-nombre="{{ apuesta.nombre|lower }}">
-            <div class="card-body p-2">
+            <div class="card-body">
 
-                <div class="row border-bottom py-2">
-                    <div class="col-8 fw-bold text-center">{{ apuesta.nombre }}</div>
-
-                    {% if request.user.is_staff %}
-                    <div class="col-4 text-center">
-                        {% if apuesta.pagado %}
-                            <span class="badge bg-success">Sí</span>
-                        {% else %}
-                            <span class="badge bg-danger">No</span>
-                        {% endif %}
+                <div class="apuesta-mobile-header">
+                    <div class="apuesta-mobile-nombre">
+                        {{ apuesta.nombre }}
                     </div>
-                    {% endif %}
-                </div>
 
-                <div class="row border-bottom py-2">
-                    <div class="col-12 text-center">
-                        {% for equipo in item.equipos|slice:":6" %}
-                            <span class="equipo-mini me-2 mb-1">
-                                <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
-                                {{ equipo.codigo }}
-                            </span>
-                        {% endfor %}
+                    <div class="apuesta-mobile-goleador">
+                        {{ apuesta.goleador }}<br>
+                        <img src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png">
+                        {{ item.equipo_goleador_info.codigo }}
                     </div>
                 </div>
 
-                <div class="row border-bottom py-2">
-                    <div class="col-12 text-center">
-                        {% for equipo in item.equipos|slice:"6:12" %}
-                            <span class="equipo-mini me-2 mb-1">
-                                <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
-                                {{ equipo.codigo }}
-                            </span>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <div class="row py-2">
-                    <div class="col-6 text-center">
-                        <strong>Goleador</strong><br>
-                        {{ apuesta.goleador }}
-                    </div>
-
-                    <div class="col-6 text-center">
-                        <strong>Selección</strong><br>
-                        {{ apuesta.equipo_goleador }}
-                    </div>
+                <div class="apuesta-mobile-equipos">
+                    {% for equipo in item.equipos %}
+                        <div class="apuesta-mobile-equipo">
+                            <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
+                            {{ equipo.codigo }}
+                        </div>
+                    {% endfor %}
                 </div>
 
                 {% if request.user.is_staff %}
-                <div class="text-end">
-                    <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                </div>
+                    <div class="text-end mt-2">
+                        <a href="{% url 'editar_apuesta' apuesta.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </div>
                 {% endif %}
 
             </div>
         </div>
         {% endwith %}
-        {% empty %}
+    {% empty %}
         <div class="card shadow-sm">
             <div class="card-body text-center text-muted">
                 No hay apuestas todavía.

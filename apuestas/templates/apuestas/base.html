@@ -579,20 +579,6 @@
             }
         }
 
-        .apuestas-mobile {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .apuestas-table-card {
-                display: none;
-            }
-
-            .apuestas-mobile {
-                display: block;
-            }
-        }
-
         .flag-match {
             width: 18px;
             height: 12px;
@@ -600,6 +586,84 @@
             border: 1px solid #ddd;
             margin: 0 4px;
             vertical-align: middle;
+        }
+
+        .apuestas-mobile {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .apuestas-table-card {
+                display: none !important;
+            }
+
+            .apuestas-mobile {
+                display: block !important;
+            }
+
+            .apuesta-mobile-card {
+                font-size: 0.82rem;
+            }
+
+            .apuesta-mobile-header {
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+                align-items: center;
+                border-bottom: 1px solid #dee2e6;
+                padding-bottom: 8px;
+                margin-bottom: 8px;
+            }
+
+            .apuesta-mobile-nombre {
+                font-weight: 800;
+                font-size: 0.95rem;
+            }
+
+            .apuesta-mobile-goleador {
+                text-align: right;
+                font-weight: 700;
+                font-size: 0.78rem;
+                white-space: nowrap;
+            }
+
+            .apuesta-mobile-equipos {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px 4px;
+                text-align: center;
+                border-bottom: 1px solid #dee2e6;
+                padding: 8px 0;
+            }
+
+            .apuesta-mobile-equipo {
+                font-weight: 700;
+                font-size: 0.78rem;
+                white-space: nowrap;
+            }
+
+            .apuesta-mobile-equipo img,
+            .apuesta-mobile-goleador img {
+                width: 20px;
+                height: 14px;
+                object-fit: cover;
+                border: 1px solid #ddd;
+                margin-right: 3px;
+            }
+        }
+
+        .clasificacion-mobile {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .clasificacion-table-card {
+                display: none !important;
+            }
+
+            .clasificacion-mobile {
+                display: block !important;
+            }
         }
     </style>
     {% load static %}

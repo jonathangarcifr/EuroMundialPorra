@@ -55,6 +55,7 @@ def ver_apuestas(request):
         apuestas_preparadas.append({
             "apuesta": apuesta,
             "equipos": equipos,
+            "equipo_goleador_info": obtener_info_equipo(apuesta.equipo_goleador),
         })
 
     return render(
