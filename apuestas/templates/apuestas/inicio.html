@@ -2,11 +2,21 @@
 
 {% block contenido %}
 
-<div class="text-center mb-5">
+{% load static %}
+
+<div class="text-center mb-4">
+
+    <img
+        src="{% static 'apuestas/img/logo.png' %}"
+        alt="EuroMundial Porra"
+        style="width:120px; height:auto;"
+        class="mb-3"
+    >
+
     <h1 class="fw-bold">
-        <i class="bi bi-globe-europe-africa text-primary"></i>
         EuroMundial Porra
     </h1>
+
 </div>
 
 <div class="row g-4">
