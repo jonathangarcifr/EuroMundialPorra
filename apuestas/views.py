@@ -551,20 +551,27 @@ def obtener_fase_clasificacion():
 
 def calcular_puntos_equipo_por_fase(nombre_equipo):
     puntos = {
-        "J1": 0,
-        "J2": 0,
-        "J3": 0,
-        "DIEC": 0,
-        "OCT": 0,
-        "CUA": 0,
-        "SEM": 0,
-        "FINAL": 0,
+        "J1": {"valor": 0, "activa": False},
+        "J2": {"valor": 0, "activa": False},
+        "J3": {"valor": 0, "activa": False},
+        "DIEC": {"valor": 0, "activa": False},
+        "OCT": {"valor": 0, "activa": False},
+        "CUA": {"valor": 0, "activa": False},
+        "SEM": {"valor": 0, "activa": False},
+        "FINAL": {"valor": 0, "activa": False},
     }
 
-    partidos = Partido.objects.filter(jugado=True).order_by("fecha_partido", "id")
+    partidos = Partido.objects.filter(
+        jugado=True
+    ).order_by("fecha_partido", "id")
 
     for partido in partidos:
         if partido.fase not in PUNTOS_FASE:
+            continue
+
+        clave_fase = FASE_TEMPLATE.get(partido.fase)
+
+        if not clave_fase:
             continue
 
         if nombre_equipo == partido.equipo_local:
@@ -575,6 +582,8 @@ def calcular_puntos_equipo_por_fase(nombre_equipo):
             goles_contra = partido.goles_local
         else:
             continue
+
+        puntos[clave_fase]["activa"] = True
 
         puntos_partido = 0
 
@@ -587,44 +596,45 @@ def calcular_puntos_equipo_por_fase(nombre_equipo):
 
         puntos_partido += goles_favor
 
-        FASE_TEMPLATE = {
-            "J1": "J1",
-            "J2": "J2",
-            "J3": "J3",
-            "1/16": "DIEC",
-            "1/8": "OCT",
-            "1/4": "CUA",
-            "1/2": "SEM",
-            "FINAL": "FINAL",
-        }
+        puntos[clave_fase]["valor"] += puntos_partido
 
-        clave_fase = FASE_TEMPLATE.get(partido.fase)
+    puntos["TOTAL"] = sum(
+        puntos[fase]["valor"]
+        for fase in ["J1", "J2", "J3", "DIEC", "OCT", "CUA", "SEM", "FINAL"]
+    )
 
-        if clave_fase:
-            puntos[clave_fase] += puntos_partido
-
-            puntos["TOTAL"] = sum(puntos.values())
-
-            return puntos
+    return puntos
 
 
 def calcular_puntos_goleador_por_fase(nombre_jugador, nombre_equipo):
     puntos = {
-        "J1": 0,
-        "J2": 0,
-        "J3": 0,
-        "DIEC": 0,
-        "OCT": 0,
-        "CUA": 0,
-        "SEM": 0,
-        "FINAL": 0,
+        "J1": {"valor": 0, "activa": False},
+        "J2": {"valor": 0, "activa": False},
+        "J3": {"valor": 0, "activa": False},
+        "DIEC": {"valor": 0, "activa": False},
+        "OCT": {"valor": 0, "activa": False},
+        "CUA": {"valor": 0, "activa": False},
+        "SEM": {"valor": 0, "activa": False},
+        "FINAL": {"valor": 0, "activa": False},
     }
 
-    partidos = Partido.objects.filter(jugado=True).order_by("fecha_partido", "id")
+    partidos = Partido.objects.filter(
+        jugado=True
+    ).order_by("fecha_partido", "id")
 
     for partido in partidos:
         if partido.fase not in PUNTOS_GOLEADOR:
             continue
+
+        clave_fase = FASE_TEMPLATE.get(partido.fase)
+
+        if not clave_fase:
+            continue
+
+        if nombre_equipo not in [partido.equipo_local, partido.equipo_visitante]:
+            continue
+
+        puntos[clave_fase]["activa"] = True
 
         goleador = partido.goleadores.filter(
             jugador__iexact=nombre_jugador,
@@ -632,9 +642,14 @@ def calcular_puntos_goleador_por_fase(nombre_jugador, nombre_equipo):
         ).first()
 
         if goleador:
-            puntos[partido.fase] += goleador.goles * PUNTOS_GOLEADOR[partido.fase]
+            puntos[clave_fase]["valor"] += (
+                goleador.goles * PUNTOS_GOLEADOR[partido.fase]
+            )
 
-    puntos["TOTAL"] = sum(puntos.values())
+    puntos["TOTAL"] = sum(
+        puntos[fase]["valor"]
+        for fase in ["J1", "J2", "J3", "DIEC", "OCT", "CUA", "SEM", "FINAL"]
+    )
 
     return puntos
 
