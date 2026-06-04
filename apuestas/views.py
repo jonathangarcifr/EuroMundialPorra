@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from django.core.paginator import Paginator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
+from django.db.models import Prefetch
 from .models import Partido, Apuesta, GoleadorPartido
 from .forms import ApuestaForm, PartidoForm
 from reportlab.lib import colors
@@ -162,20 +162,28 @@ def resultados(request):
         partidos_fase = (
             Partido.objects
             .filter(fase=codigo_fase)
-            .prefetch_related("goleadores")
+            .prefetch_related(
+                Prefetch(
+                    "goleadores",
+                    queryset=GoleadorPartido.objects.order_by("jugador"),
+                    to_attr="goleadores_prefetch"
+                )
+            )
             .order_by("fecha_partido", "id")
         )
 
         partidos_preparados = []
 
         for partido in partidos_fase:
-            goleadores_local = partido.goleadores.filter(
-                equipo=partido.equipo_local
-            ).order_by("jugador")
+            goleadores_local = [
+                g for g in partido.goleadores_prefetch
+                if g.equipo == partido.equipo_local
+            ]
 
-            goleadores_visitante = partido.goleadores.filter(
-                equipo=partido.equipo_visitante
-            ).order_by("jugador")
+            goleadores_visitante = [
+                g for g in partido.goleadores_prefetch
+                if g.equipo == partido.equipo_visitante
+            ]
 
             partidos_preparados.append({
                 "partido": partido,
@@ -183,7 +191,7 @@ def resultados(request):
                 "visitante_info": obtener_info_equipo(partido.equipo_visitante),
                 "goleadores_local": goleadores_local,
                 "goleadores_visitante": goleadores_visitante,
-                "total_goleadores": goleadores_local.count() + goleadores_visitante.count(),
+                "total_goleadores": len(goleadores_local) + len(goleadores_visitante),
             })
 
         if partidos_preparados:
@@ -354,6 +362,17 @@ PUNTOS_GOLEADOR = {
     "1/4": 4,
     "1/2": 5,
     "FINAL": 10,
+}
+
+FASE_TEMPLATE = {
+    "J1": "J1",
+    "J2": "J2",
+    "J3": "J3",
+    "1/16": "DIEC",
+    "1/8": "OCT",
+    "1/4": "CUA",
+    "1/2": "SEM",
+    "FINAL": "FINAL",
 }
 
 
