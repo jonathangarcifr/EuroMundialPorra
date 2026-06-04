@@ -196,6 +196,12 @@
             </div>
         </div>
         {% endwith %}
+        {% empty %}
+        <div class="card shadow-sm">
+            <div class="card-body text-center text-muted">
+                No hay apuestas todavía.
+            </div>
+        </div>
     {% endfor %}
 </div>
 
