@@ -79,7 +79,6 @@
             <thead class="table-primary">
                 <tr>
                     <th>Goleador</th>
-                    <th>Selección</th>
                     <th>J1</th>
                     <th>J2</th>
                     <th>J3</th>
@@ -95,13 +94,22 @@
             <tbody>
                 {% for item in goleadores %}
                     <tr>
-                        <td class="fw-bold text-start">{{ item.jugador }}</td>
+                        <td class="fw-bold text-start puntuaciones-goleador">
 
-                        <td>
-                            <span class="equipo-mini" title="{{ item.equipo.nombre }}">
-                                <img src="https://flagcdn.com/w20/{{ item.equipo.flag }}.png" alt="{{ item.equipo.nombre }}">
-                                {{ item.equipo.nombre }}
-                            </span>
+                            <div class="goleador-inline">
+                                <span>{{ item.jugador }}</span>
+
+                                <span>    </span>
+
+                                <span class="equipo-mini" title="{{ item.equipo.nombre }}">
+                                    <img
+                                        src="https://flagcdn.com/w20/{{ item.equipo.flag }}.png"
+                                        alt="{{ item.equipo.nombre }}"
+                                    >
+                                    {{ item.equipo.codigo }}
+                                </span>
+                            </div>
+
                         </td>
 
                         <td>{{ item.puntos.J1.valor }}</td>
