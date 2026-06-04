@@ -131,31 +131,40 @@ def resultados(request):
 
                 return redirect(f"{reverse('resultados')}?fase={partido.fase}")
 
-    partidos = Partido.objects.all().order_by("fecha_partido", "id")
-
-    for partido in partidos:
-        equipos_partido = [partido.equipo_local, partido.equipo_visitante]
-
-        apuestas_goleadores = (
-            Apuesta.objects
-            .filter(equipo_goleador__in=equipos_partido)
-            .values("goleador", "equipo_goleador")
-            .distinct()
-            .order_by("equipo_goleador", "goleador")
+            partidos_sin_goleadores = (
+            Partido.objects
+            .filter(goleadores__isnull=True)
+            .order_by("fecha_partido", "id")
         )
 
-        for apuesta in apuestas_goleadores:
-            GoleadorPartido.objects.get_or_create(
-                partido=partido,
-                jugador=apuesta["goleador"],
-                equipo=apuesta["equipo_goleador"],
-                defaults={"goles": 0}
+        for partido in partidos_sin_goleadores:
+            equipos_partido = [partido.equipo_local, partido.equipo_visitante]
+
+            apuestas_goleadores = (
+                Apuesta.objects
+                .filter(equipo_goleador__in=equipos_partido)
+                .values("goleador", "equipo_goleador")
+                .distinct()
+                .order_by("equipo_goleador", "goleador")
             )
+
+            for apuesta in apuestas_goleadores:
+                GoleadorPartido.objects.get_or_create(
+                    partido=partido,
+                    jugador=apuesta["goleador"],
+                    equipo=apuesta["equipo_goleador"],
+                    defaults={"goles": 0}
+                )
 
     jornadas = []
 
     for codigo_fase, nombre_fase in Partido.FASES:
-        partidos_fase = Partido.objects.filter(fase=codigo_fase).order_by("fecha_partido", "id")
+        partidos_fase = (
+            Partido.objects
+            .filter(fase=codigo_fase)
+            .prefetch_related("goleadores")
+            .order_by("fecha_partido", "id")
+        )
 
         partidos_preparados = []
 
