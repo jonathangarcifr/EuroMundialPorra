@@ -621,10 +621,14 @@
             }
 
             .apuesta-mobile-goleador {
-                text-align: right;
-                font-weight: 700;
-                font-size: 0.78rem;
-                white-space: nowrap;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 4px;
+                font-size: 0.72rem;
+                font-weight: 600;
+                color: #212529;
+                line-height: 1.2;
             }
 
             .apuesta-mobile-equipos {
@@ -644,11 +648,11 @@
 
             .apuesta-mobile-equipo img,
             .apuesta-mobile-goleador img {
-                width: 20px;
-                height: 14px;
+                width: 16px;
+                height: 11px;
                 object-fit: cover;
                 border: 1px solid #ddd;
-                margin-right: 3px;
+                vertical-align: middle;
             }
         }
 
@@ -688,6 +692,27 @@
             height: 12px;
             object-fit: cover;
             border: 1px solid #ddd;
+        }
+
+        .seleccion-count-badge {
+            font-size: 0.58rem;
+            padding: 2px 5px;
+            border-radius: 999px;
+            vertical-align: middle;
+        }
+
+        .resumen-mobile {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .resumen-table-card {
+                display: none !important;
+            }
+
+            .resumen-mobile {
+                display: block !important;
+            }
         }
     </style>
     {% load static %}

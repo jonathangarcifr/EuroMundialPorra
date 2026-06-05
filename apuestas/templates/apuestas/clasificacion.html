@@ -20,6 +20,120 @@
 
 </div>
 
+<div class="card shadow-sm mb-3 resumen-table-card">
+    <div class="card-body p-2">
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover align-middle table-sm apuestas-table mb-0">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Eq. 1</th>
+                        <th>Eq. 2</th>
+                        <th>Eq. 3</th>
+                        <th>Eq. 4</th>
+                        <th>Eq. 5</th>
+                        <th>Eq. 6</th>
+                        <th>Eq. 7</th>
+                        <th>Eq. 8</th>
+                        <th>Eq. 9</th>
+                        <th>Eq. 10</th>
+                        <th>Eq. 11</th>
+                        <th>Eq. 12</th>
+                        <th>Goleador</th>
+                        <th>Puntos</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for fila in resumen_ideal_cuchara %}
+                        <tr>
+                            <td class="fw-bold text-primary">
+                                {{ fila.tipo }}
+                            </td>
+
+                            {% for equipo in fila.equipos %}
+                                <td>
+                                    <span
+                                        class="equipo-mini"
+                                        title="{{ equipo.nombre }} - {{ equipo.puntos }} puntos"
+                                    >
+                                        <img src="https://flagcdn.com/w20/{{ equipo.info.flag }}.png" alt="{{ equipo.nombre }}">
+                                        {{ equipo.info.codigo }}
+                                    </span>
+                                </td>
+                            {% endfor %}
+
+                            <td class="fw-bold">
+                                {% if fila.goleador %}
+                                    {{ fila.goleador.jugador }}
+
+                                    <span class="ms-1 equipo-mini" title="{{ fila.goleador.equipo }}">
+                                        <img src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png">
+                                        {{ fila.goleador.equipo_info.codigo }}
+                                    </span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td class="fw-bold text-primary">
+                                {{ fila.puntos }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<div class="resumen-mobile">
+    {% for fila in resumen_ideal_cuchara %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+
+                <div class="text-center apuesta-mobile-nombre">
+                    {{ fila.tipo }}
+                </div>
+
+                <hr class="my-2">
+
+                <div class="apuesta-mobile-goleador">
+                    {% if fila.goleador %}
+                        {{ fila.goleador.jugador }}
+                        <img src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png">
+                        {{ fila.goleador.equipo_info.codigo }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+
+                <hr class="my-2">
+
+                <div class="apuesta-mobile-equipos">
+                    {% for equipo in fila.equipos %}
+                        <div class="apuesta-mobile-equipo">
+                            <img src="https://flagcdn.com/w20/{{ equipo.info.flag }}.png">
+                            {{ equipo.info.codigo }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <hr class="my-2">
+
+                <div class="text-center">
+                    <span class="fw-bold text-primary">
+                        {{ fila.puntos }} puntos
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
 <div class="card shadow-sm mb-3">
     <div class="card-body py-2">
         <input
@@ -41,18 +155,18 @@
                         <tr>
                             <th>Pos</th>
                             <th>Nombre</th>
-                            <th>E1</th>
-                            <th>E2</th>
-                            <th>E3</th>
-                            <th>E4</th>
-                            <th>E5</th>
-                            <th>E6</th>
-                            <th>E7</th>
-                            <th>E8</th>
-                            <th>E9</th>
-                            <th>E10</th>
-                            <th>E11</th>
-                            <th>E12</th>
+                            <th>Eq. 1</th>
+                            <th>Eq. 2</th>
+                            <th>Eq. 3</th>
+                            <th>Eq. 4</th>
+                            <th>Eq. 5</th>
+                            <th>Eq. 6</th>
+                            <th>Eq. 7</th>
+                            <th>Eq. 8</th>
+                            <th>Eq. 9</th>
+                            <th>Eq. 10</th>
+                            <th>Eq. 11</th>
+                            <th>Eq. 12</th>
                             <th>Goleador</th>
                             <th>Puntos</th>
                         </tr>

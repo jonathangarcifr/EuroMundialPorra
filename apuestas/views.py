@@ -340,11 +340,14 @@ def clasificacion(request):
 
     clasificacion_data.sort(key=lambda x: x["puntos_totales"], reverse=True)
 
+    resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
+
     return render(
         request,
         "apuestas/clasificacion.html",
         {
             "clasificacion": clasificacion_data,
+            "resumen_ideal_cuchara": resumen_ideal_cuchara,
         }
     )
 
@@ -734,6 +737,15 @@ def puntuaciones(request):
         ("Bombo 6", BOMBO_6),
     ]
 
+    conteo_selecciones = {}
+
+    apuestas = Apuesta.objects.all()
+
+    for apuesta in apuestas:
+        for i in range(1, 13):
+            equipo = getattr(apuesta, f"equipo_{i}")
+            conteo_selecciones[equipo] = conteo_selecciones.get(equipo, 0) + 1
+
     bombos_puntuaciones = []
 
     for nombre_bombo, equipos_bombo in bombos:
@@ -748,12 +760,25 @@ def puntuaciones(request):
             equipos_del_bombo.append({
                 "equipo": info,
                 "puntos": puntos,
+                "veces_elegida": conteo_selecciones.get(nombre_equipo, 0),
             })
 
         bombos_puntuaciones.append({
             "nombre": nombre_bombo,
             "equipos": equipos_del_bombo,
         })
+
+    conteo_goleadores = {}
+
+    for apuesta in apuestas:
+        clave = (
+            apuesta.goleador,
+            apuesta.equipo_goleador,
+        )
+
+        conteo_goleadores[clave] = (
+            conteo_goleadores.get(clave, 0) + 1
+        )
 
     goleadores_elegidos = (
         Apuesta.objects
@@ -776,6 +801,13 @@ def puntuaciones(request):
             "jugador": item["goleador"],
             "equipo": equipo_info,
             "puntos": puntos,
+            "veces_elegido": conteo_goleadores.get(
+                (
+                    item["goleador"],
+                    item["equipo_goleador"],
+                ),
+                0,
+            ),
         })
 
     return render(
@@ -786,3 +818,87 @@ def puntuaciones(request):
             "goleadores": goleadores,
         }
     )
+
+def obtener_resumen_ideal_cuchara():
+    bombos = [BOMBO_1, BOMBO_2, BOMBO_3, BOMBO_4, BOMBO_5, BOMBO_6]
+
+    apuestas = Apuesta.objects.all()
+
+    goleadores_elegidos = (
+        Apuesta.objects
+        .values("goleador", "equipo_goleador")
+        .distinct()
+    )
+
+    goleadores = []
+
+    for item in goleadores_elegidos:
+        puntos_goleador = calcular_puntos_goleador_por_fase(
+            item["goleador"],
+            item["equipo_goleador"],
+        )["TOTAL"]
+
+        goleadores.append({
+            "jugador": item["goleador"],
+            "equipo": item["equipo_goleador"],
+            "equipo_info": obtener_info_equipo(item["equipo_goleador"]),
+            "puntos": puntos_goleador,
+        })
+
+    filas = []
+
+    for tipo in ["APUESTA IDEAL", "CUCHARA DE MADERA"]:
+        equipos_finales = []
+        puntos_total = 0
+
+        for bombo in bombos:
+            equipos_bombo = []
+
+            for nombre_equipo, _ in bombo:
+                puntos = calcular_puntos_equipo_por_fase(nombre_equipo)["TOTAL"]
+                info = obtener_info_equipo(nombre_equipo)
+
+                equipos_bombo.append({
+                    "nombre": nombre_equipo,
+                    "info": info,
+                    "puntos": puntos,
+                })
+
+            if tipo == "APUESTA IDEAL":
+                seleccionados = sorted(
+                    equipos_bombo,
+                    key=lambda x: (-x["puntos"], x["nombre"])
+                )[:2]
+
+                goleador = sorted(
+                    goleadores,
+                    key=lambda x: (-x["puntos"], x["jugador"])
+                )[0] if goleadores else None
+
+            else:
+                seleccionados = sorted(
+                    equipos_bombo,
+                    key=lambda x: (x["puntos"], x["nombre"])
+                )[:2]
+
+                goleador = sorted(
+                    goleadores,
+                    key=lambda x: (x["puntos"], x["jugador"])
+                )[0] if goleadores else None
+
+            seleccionados = sorted(seleccionados, key=lambda x: x["nombre"])
+
+            equipos_finales.extend(seleccionados)
+            puntos_total += sum(equipo["puntos"] for equipo in seleccionados)
+
+            if goleador:
+                puntos_total += goleador["puntos"]
+
+        filas.append({
+            "tipo": tipo,
+            "equipos": equipos_finales,
+            "goleador": goleador,
+            "puntos": puntos_total,
+        })
+
+    return filas
