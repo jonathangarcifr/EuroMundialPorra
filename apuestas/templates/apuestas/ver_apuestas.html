@@ -106,7 +106,15 @@
                                 </td>
                             {% endfor %}
 
-                            <td class="fw-semibold">{{ apuesta.goleador }}</td>
+                            <td class="fw-semibold">
+                                <span class="equipo-mini" title="{{ item.equipo_goleador_info.nombre }}">
+                                    <img
+                                        src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
+                                        alt="{{ item.equipo_goleador_info.nombre }}"
+                                    >
+                                    {{ apuesta.goleador }}
+                                </span>
+                            </td>
                             
                             {% if request.user.is_staff %}
                             <td>

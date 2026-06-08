@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 from django.db.models import Prefetch
+from django.db.models.functions import Lower
 from .models import Partido, Apuesta, GoleadorPartido
 from .forms import ApuestaForm, PartidoForm
 from reportlab.lib import colors
@@ -37,7 +38,7 @@ def obtener_info_equipo(nombre):
 
 
 def ver_apuestas(request):
-    apuestas = Apuesta.objects.all().order_by("-fecha_creacion")
+    apuestas = Apuesta.objects.all().order_by(Lower("nombre"))
 
     leyenda = [
         obtener_info_equipo(nombre)
@@ -338,7 +339,12 @@ def clasificacion(request):
             "tooltip_goleador": tooltip_goleador,
         })
 
-    clasificacion_data.sort(key=lambda x: x["puntos_totales"], reverse=True)
+    clasificacion_data.sort(
+        key=lambda x: (
+            -x["puntos_totales"],
+            x["apuesta"].nombre.lower(),
+        )
+    )
 
     resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
 
@@ -381,7 +387,12 @@ def obtener_datos_clasificacion():
             ),
         })
 
-    clasificacion_data.sort(key=lambda x: x["puntos_totales"], reverse=True)
+    clasificacion_data.sort(
+        key=lambda x: (
+            -x["puntos_totales"],
+            x["apuesta"].nombre.lower(),
+        )
+    )
 
     return clasificacion_data
 

@@ -213,7 +213,13 @@
                                         data-bs-placement="top"
                                         title="{{ item.tooltip_goleador }}"
                                     >
-                                        {{ item.apuesta.goleador }}
+                                        <span class="equipo-mini">
+                                            <img
+                                                src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
+                                                alt="{{ item.equipo_goleador_info.nombre }}"
+                                            >
+                                            {{ item.apuesta.goleador }}
+                                        </span>
                                     </span>
                                 </td>
 
