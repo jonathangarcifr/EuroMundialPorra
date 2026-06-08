@@ -254,7 +254,7 @@ def resultados(request):
 
 
 def clasificacion(request):
-    apuestas = Apuesta.objects.all()
+    apuestas = Apuesta.objects.all().order_by("nombre")
 
     clasificacion_data = []
 
@@ -330,6 +330,7 @@ def obtener_datos_clasificacion():
             "apuesta": apuesta,
             "equipos": equipos,
             "puntos_totales": puntos_totales,
+            "equipo_goleador_info": obtener_info_equipo(apuesta.equipo_goleador),
             "puntos_display": (
                 f"{puntos_equipos + puntos_goleador}"
                 f".{puntos_goleador:02d}"
@@ -378,6 +379,96 @@ FASE_TEMPLATE = {
     "FINAL": "FINAL",
 }
 
+def crear_diccionario_fases():
+    return {
+        "J1": {"valor": 0, "activa": False},
+        "J2": {"valor": 0, "activa": False},
+        "J3": {"valor": 0, "activa": False},
+        "DIEC": {"valor": 0, "activa": False},
+        "OCT": {"valor": 0, "activa": False},
+        "CUA": {"valor": 0, "activa": False},
+        "SEM": {"valor": 0, "activa": False},
+        "FINAL": {"valor": 0, "activa": False},
+    }
+
+
+def calcular_puntuaciones_globales():
+    puntos_equipos = {}
+    puntos_goleadores = {}
+
+    partidos = (
+        Partido.objects
+        .filter(jugado=True)
+        .prefetch_related("goleadores")
+        .order_by("fecha_partido", "id")
+    )
+
+    for partido in partidos:
+        clave_fase = FASE_TEMPLATE.get(partido.fase)
+
+        if not clave_fase:
+            continue
+
+        equipos_partido = [
+            (
+                partido.equipo_local,
+                partido.goles_local,
+                partido.goles_visitante,
+            ),
+            (
+                partido.equipo_visitante,
+                partido.goles_visitante,
+                partido.goles_local,
+            ),
+        ]
+
+        for equipo, goles_favor, goles_contra in equipos_partido:
+            if equipo not in puntos_equipos:
+                puntos_equipos[equipo] = crear_diccionario_fases()
+
+            puntos_equipos[equipo][clave_fase]["activa"] = True
+
+            puntos_partido = 0
+
+            if goles_favor > goles_contra:
+                puntos_partido += PUNTOS_FASE[partido.fase]["victoria"]
+            elif goles_favor == goles_contra:
+                puntos_partido += PUNTOS_FASE[partido.fase].get("empate", 0)
+            else:
+                puntos_partido += PUNTOS_FASE[partido.fase]["derrota"]
+
+            puntos_partido += goles_favor
+
+            puntos_equipos[equipo][clave_fase]["valor"] += puntos_partido
+
+        for goleador in partido.goleadores.all():
+            clave_goleador = (
+                goleador.jugador,
+                goleador.equipo,
+            )
+
+            if clave_goleador not in puntos_goleadores:
+                puntos_goleadores[clave_goleador] = crear_diccionario_fases()
+
+            puntos_goleadores[clave_goleador][clave_fase]["activa"] = True
+            puntos_goleadores[clave_goleador][clave_fase]["valor"] += (
+                goleador.goles * PUNTOS_GOLEADOR.get(partido.fase, 0)
+            )
+
+    for datos in puntos_equipos.values():
+        datos["TOTAL"] = sum(
+            datos[fase]["valor"]
+            for fase in ["J1", "J2", "J3", "DIEC", "OCT", "CUA", "SEM", "FINAL"]
+        )
+
+    for datos in puntos_goleadores.values():
+        datos["TOTAL"] = sum(
+            datos[fase]["valor"]
+            for fase in ["J1", "J2", "J3", "DIEC", "OCT", "CUA", "SEM", "FINAL"]
+        )
+
+    return puntos_equipos, puntos_goleadores
+
 
 def calcular_puntos_apuesta(apuesta):
     equipos_apostados = [
@@ -400,7 +491,12 @@ def calcular_puntos_apuesta(apuesta):
 
     detalle_equipos = {}
 
-    partidos = Partido.objects.filter(jugado=True).order_by("fecha_partido", "id")
+    partidos = (
+        Partido.objects
+        .filter(jugado=True)
+        .prefetch_related("goleadores")
+        .order_by("fecha_partido", "id")
+    )
 
     for partido in partidos:
         if partido.fase not in PUNTOS_FASE:
@@ -582,107 +678,26 @@ def obtener_fase_clasificacion():
 
     return ultima_fase_completa or "Sin partidos finalizados"
 
-def calcular_puntos_equipo_por_fase(nombre_equipo):
-    puntos = {
-        "J1": {"valor": 0, "activa": False},
-        "J2": {"valor": 0, "activa": False},
-        "J3": {"valor": 0, "activa": False},
-        "DIEC": {"valor": 0, "activa": False},
-        "OCT": {"valor": 0, "activa": False},
-        "CUA": {"valor": 0, "activa": False},
-        "SEM": {"valor": 0, "activa": False},
-        "FINAL": {"valor": 0, "activa": False},
-    }
+def calcular_puntos_equipo_por_fase(nombre_equipo, puntos_equipos=None):
+    if puntos_equipos is None:
+        puntos_equipos, _ = calcular_puntuaciones_globales()
 
-    partidos = Partido.objects.filter(
-        jugado=True
-    ).order_by("fecha_partido", "id")
-
-    for partido in partidos:
-        if partido.fase not in PUNTOS_FASE:
-            continue
-
-        clave_fase = FASE_TEMPLATE.get(partido.fase)
-
-        if not clave_fase:
-            continue
-
-        if nombre_equipo == partido.equipo_local:
-            goles_favor = partido.goles_local
-            goles_contra = partido.goles_visitante
-        elif nombre_equipo == partido.equipo_visitante:
-            goles_favor = partido.goles_visitante
-            goles_contra = partido.goles_local
-        else:
-            continue
-
-        puntos[clave_fase]["activa"] = True
-
-        puntos_partido = 0
-
-        if goles_favor > goles_contra:
-            puntos_partido += PUNTOS_FASE[partido.fase]["victoria"]
-        elif goles_favor == goles_contra:
-            puntos_partido += PUNTOS_FASE[partido.fase].get("empate", 0)
-        else:
-            puntos_partido += PUNTOS_FASE[partido.fase]["derrota"]
-
-        puntos_partido += goles_favor
-
-        puntos[clave_fase]["valor"] += puntos_partido
-
-    puntos["TOTAL"] = sum(
-        puntos[fase]["valor"]
-        for fase in ["J1", "J2", "J3", "DIEC", "OCT", "CUA", "SEM", "FINAL"]
-    )
+    puntos = puntos_equipos.get(nombre_equipo, crear_diccionario_fases())
+    puntos["TOTAL"] = puntos.get("TOTAL", 0)
 
     return puntos
 
 
-def calcular_puntos_goleador_por_fase(nombre_jugador, nombre_equipo):
-    puntos = {
-        "J1": {"valor": 0, "activa": False},
-        "J2": {"valor": 0, "activa": False},
-        "J3": {"valor": 0, "activa": False},
-        "DIEC": {"valor": 0, "activa": False},
-        "OCT": {"valor": 0, "activa": False},
-        "CUA": {"valor": 0, "activa": False},
-        "SEM": {"valor": 0, "activa": False},
-        "FINAL": {"valor": 0, "activa": False},
-    }
+def calcular_puntos_goleador_por_fase(nombre_jugador, nombre_equipo, puntos_goleadores=None):
+    if puntos_goleadores is None:
+        _, puntos_goleadores = calcular_puntuaciones_globales()
 
-    partidos = Partido.objects.filter(
-        jugado=True
-    ).order_by("fecha_partido", "id")
-
-    for partido in partidos:
-        if partido.fase not in PUNTOS_GOLEADOR:
-            continue
-
-        clave_fase = FASE_TEMPLATE.get(partido.fase)
-
-        if not clave_fase:
-            continue
-
-        if nombre_equipo not in [partido.equipo_local, partido.equipo_visitante]:
-            continue
-
-        puntos[clave_fase]["activa"] = True
-
-        goleador = partido.goleadores.filter(
-            jugador__iexact=nombre_jugador,
-            equipo=nombre_equipo,
-        ).first()
-
-        if goleador:
-            puntos[clave_fase]["valor"] += (
-                goleador.goles * PUNTOS_GOLEADOR[partido.fase]
-            )
-
-    puntos["TOTAL"] = sum(
-        puntos[fase]["valor"]
-        for fase in ["J1", "J2", "J3", "DIEC", "OCT", "CUA", "SEM", "FINAL"]
+    puntos = puntos_goleadores.get(
+        (nombre_jugador, nombre_equipo),
+        crear_diccionario_fases()
     )
+
+    puntos["TOTAL"] = puntos.get("TOTAL", 0)
 
     return puntos
 
@@ -696,6 +711,8 @@ def puntuaciones(request):
         ("Bombo 5", BOMBO_5),
         ("Bombo 6", BOMBO_6),
     ]
+
+    puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
 
     conteo_selecciones = {}
 
@@ -715,7 +732,10 @@ def puntuaciones(request):
 
         for nombre_equipo, _ in equipos_ordenados:
             info = obtener_info_equipo(nombre_equipo)
-            puntos = calcular_puntos_equipo_por_fase(nombre_equipo)
+            puntos = calcular_puntos_equipo_por_fase(
+                nombre_equipo,
+                puntos_equipos_globales
+            )
 
             equipos_del_bombo.append({
                 "equipo": info,
@@ -753,6 +773,7 @@ def puntuaciones(request):
         puntos = calcular_puntos_goleador_por_fase(
             item["goleador"],
             item["equipo_goleador"],
+            puntos_goleadores_globales
         )
 
         equipo_info = obtener_info_equipo(item["equipo_goleador"])
@@ -782,7 +803,7 @@ def puntuaciones(request):
 def obtener_resumen_ideal_cuchara():
     bombos = [BOMBO_1, BOMBO_2, BOMBO_3, BOMBO_4, BOMBO_5, BOMBO_6]
 
-    apuestas = Apuesta.objects.all()
+    puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
 
     goleadores_elegidos = (
         Apuesta.objects
@@ -796,6 +817,7 @@ def obtener_resumen_ideal_cuchara():
         puntos_goleador = calcular_puntos_goleador_por_fase(
             item["goleador"],
             item["equipo_goleador"],
+            puntos_goleadores_globales
         )["TOTAL"]
 
         goleadores.append({
@@ -815,7 +837,10 @@ def obtener_resumen_ideal_cuchara():
             equipos_bombo = []
 
             for nombre_equipo, _ in bombo:
-                puntos = calcular_puntos_equipo_por_fase(nombre_equipo)["TOTAL"]
+                puntos = calcular_puntos_equipo_por_fase(
+                    nombre_equipo,
+                    puntos_equipos_globales
+                )["TOTAL"]
                 info = obtener_info_equipo(nombre_equipo)
 
                 equipos_bombo.append({
@@ -862,3 +887,4 @@ def obtener_resumen_ideal_cuchara():
         })
 
     return filas
+
