@@ -195,10 +195,7 @@
                                     <td>
                                         <span
                                             class="equipo-mini"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-html="true"
-                                            data-bs-placement="top"
-                                            title="{{ equipo.tooltip }}"
+                                            title="{{ equipo.nombre }}"
                                         >
                                             <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
                                             {{ equipo.codigo }}
@@ -207,12 +204,7 @@
                                 {% endfor %}
 
                                 <td class="fw-semibold">
-                                    <span
-                                        data-bs-toggle="tooltip"
-                                        data-bs-html="true"
-                                        data-bs-placement="top"
-                                        title="{{ item.tooltip_goleador }}"
-                                    >
+                                    <span>
                                         <span class="equipo-mini">
                                             <img
                                                 src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
