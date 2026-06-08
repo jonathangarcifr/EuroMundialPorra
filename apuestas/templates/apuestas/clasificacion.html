@@ -66,12 +66,15 @@
 
                             <td class="fw-bold">
                                 {% if fila.goleador %}
-                                    {{ fila.goleador.jugador }}
 
-                                    <span class="ms-1 equipo-mini" title="{{ fila.goleador.equipo }}">
-                                        <img src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png">
-                                        {{ fila.goleador.equipo_info.codigo }}
+                                    <span class="equipo-mini">
+                                        <img
+                                            src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png"
+                                            alt="{{ fila.goleador.equipo }}"
+                                        >
+                                        {{ fila.goleador.jugador }}
                                     </span>
+
                                 {% else %}
                                     -
                                 {% endif %}
@@ -176,14 +179,16 @@
                         {% for item in clasificacion %}
                             <tr>
                                 <td class="fw-bold">
-                                    {% if forloop.counter == 1 %}
+                                   {% if item.posicion == 1 %}
                                         🥇
-                                    {% elif forloop.counter == 2 %}
+                                    {% elif item.posicion == 2 %}
                                         🥈
-                                    {% elif forloop.counter == 3 %}
+                                    {% elif item.posicion == 3 %}
                                         🥉
                                     {% else %}
-                                        {{ forloop.counter }}
+                                        <span class="badge bg-secondary">
+                                            {{ item.posicion }}
+                                        </span>
                                     {% endif %}
                                 </td>
 
@@ -242,14 +247,16 @@
                 <div class="text-center">
 
                     <div class="apuesta-mobile-nombre">
-                        {% if forloop.counter == 1 %}
+                        {% if item.posicion == 1 %}
                             🥇
-                        {% elif forloop.counter == 2 %}
+                        {% elif item.posicion == 2 %}
                             🥈
-                        {% elif forloop.counter == 3 %}
+                        {% elif item.posicion == 3 %}
                             🥉
                         {% else %}
-                            {{ forloop.counter }}
+                            <span class="badge bg-secondary">
+                                {{ item.posicion }}
+                            </span>
                         {% endif %}
                         {{ item.apuesta.nombre }}
                     </div>

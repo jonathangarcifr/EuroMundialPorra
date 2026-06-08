@@ -4,7 +4,17 @@
 
 {% block contenido %}
 
-<div class="d-flex justify-content-end gap-2 mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3 small leyenda-badges">
+        <span>
+            <span class="badge bg-primary">2</span>
+            Selección: veces elegida
+        </span>
+        <span>
+            <span class="badge bg-success">2</span>
+            Goleador: veces elegido
+        </span>
+    </div>
     <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
         <i class="bi bi-arrow-left"></i>
         Volver

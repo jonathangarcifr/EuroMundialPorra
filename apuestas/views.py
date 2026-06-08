@@ -295,6 +295,20 @@ def clasificacion(request):
         )
     )
 
+    posicion = 0
+    posicion_real = 0
+    puntos_anteriores = None
+
+    for item in clasificacion_data:
+        posicion += 1
+
+        if puntos_anteriores != item["puntos_totales"]:
+            posicion_real = posicion
+
+        item["posicion"] = posicion_real
+
+        puntos_anteriores = item["puntos_totales"]
+
     resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
 
     return render(
@@ -790,6 +804,10 @@ def puntuaciones(request):
                 0,
             ),
         })
+
+    goleadores.sort(
+        key=lambda x: x["jugador"].lower()
+    )
 
     return render(
         request,
