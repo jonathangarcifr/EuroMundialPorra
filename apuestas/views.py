@@ -270,58 +270,8 @@ def clasificacion(request):
 
         for i in range(1, 13):
             nombre_equipo = getattr(apuesta, f"equipo_{i}")
-
             info = obtener_info_equipo(nombre_equipo)
-
-            detalle = detalle_equipos.get(
-                nombre_equipo,
-                {
-                    "total": 0,
-                    "fases": {}
-                }
-            )
-
-            tooltip = f"<strong>{nombre_equipo}</strong><br>"
-
-            if detalle["fases"]:
-                for fase, puntos in detalle["fases"].items():
-                    tooltip += f"{fase}: {puntos} pts<br>"
-            else:
-                tooltip += "Sin puntos todavía<br>"
-
-            tooltip += f"<hr class='m-1'>Total: {detalle['total']} pts"
-
-            info["tooltip"] = tooltip
-
             equipos.append(info)
-
-            detalle_goleador = {}
-
-            partidos = Partido.objects.filter(jugado=True).order_by("fecha_partido", "id")
-
-            for partido in partidos:
-                goles = partido.goleadores.filter(
-                    jugador__iexact=apuesta.goleador,
-                    equipo=apuesta.equipo_goleador,
-                ).first()
-
-                if goles and goles.goles > 0:
-                    puntos = goles.goles * PUNTOS_GOLEADOR.get(partido.fase, 0)
-
-                    detalle_goleador[partido.fase] = (
-                        detalle_goleador.get(partido.fase, 0)
-                        + puntos
-                    )
-
-            tooltip_goleador = f"<strong>{apuesta.goleador}</strong><br>"
-
-            if detalle_goleador:
-                for fase, puntos in detalle_goleador.items():
-                    tooltip_goleador += f"{fase}: {puntos} pts<br>"
-            else:
-                tooltip_goleador += "Sin puntos todavía<br>"
-
-            tooltip_goleador += f"<hr class='m-1'>Total: {puntos_goleador} pts"
 
         clasificacion_data.append({
             "apuesta": apuesta,
@@ -333,10 +283,9 @@ def clasificacion(request):
             "puntos_goleador": puntos_goleador,
             "puntos_totales": puntos_totales,
             "puntos_display": (
-                f"{puntos_equipos + puntos_goleador}" 
+                f"{puntos_equipos + puntos_goleador}"
                 f".{puntos_goleador:02d}"
-             ),
-            "tooltip_goleador": tooltip_goleador,
+            ),
         })
 
     clasificacion_data.sort(
