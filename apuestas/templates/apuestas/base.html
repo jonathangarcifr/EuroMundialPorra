@@ -317,7 +317,6 @@
         }
 
         .match-card {
-            min-height: 220px;
             border: 1px solid #dfe5ec;
             border-radius: 8px;
             background: #f8fbfd;
@@ -607,8 +606,8 @@
             .apuesta-mobile-nombre {
                 font-size: 0.68rem;
                 font-weight: 800;
-                line-height: 1.05;
-                min-height: 22px;
+                line-height: 1;
+                min-height: auto;
             }
 
             .apuesta-mobile-goleador {
@@ -624,6 +623,9 @@
             .apuesta-mobile-goleador img {
                 width: 13px;
                 height: 9px;
+                object-fit: cover;
+                border: 1px solid #ddd;
+                display: block;
             }
 
             .apuesta-mobile-equipos {
@@ -656,7 +658,7 @@
             .apuestas-mobile hr,
             .clasificacion-mobile hr,
             .resumen-mobile hr {
-                margin: 0.25rem 0 !important;
+                margin: 0.18rem 0 !important;
             }
         }
     
@@ -673,6 +675,42 @@
         .leyenda-badges {
             font-size: 0.68rem;
             line-height: 1.1;
+        }
+    }
+
+    .btn-ir-arriba {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .btn-ir-arriba {
+            position: fixed;
+            right: 16px;
+            bottom: 18px;
+
+            width: 42px;
+            height: 42px;
+
+            border-radius: 50%;
+            border: none;
+
+            background: #0d6efd;
+            color: white;
+
+            display: flex;            
+            align-items: center;
+            justify-content: center;
+
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            z-index: 9999;
+
+            opacity: 0.4;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-ir-arriba:hover,
+        .btn-ir-arriba:active {
+            opacity: 0.9;
         }
     }
     </style>
@@ -710,6 +748,27 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("btnIrArriba");
+
+    if (!btn) return;
+
+    btn.addEventListener("click", function () {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
+});
+</script>
+
+{% if request.resolver_match.url_name == "ver_apuestas" or request.resolver_match.url_name == "resultados" or request.resolver_match.url_name == "clasificacion" or request.resolver_match.url_name == "puntuaciones" %}
+<button type="button" id="btnIrArriba" class="btn-ir-arriba">
+    <i class="bi bi-arrow-up"></i>
+</button>
+{% endif %}
 
 </body>
 </html>
