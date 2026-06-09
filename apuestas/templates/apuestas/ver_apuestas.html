@@ -155,18 +155,15 @@
 
                 <hr class="my-2">
 
-                <div class="text-center small fw-semibold">
-
+                <div class="apuesta-mobile-goleador">
                     {{ apuesta.goleador }}
 
-                    <span class="ms-1">
-                        <img
-                            src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
-                            style="width:18px;height:12px;"
-                        >
-                        {{ item.equipo_goleador_info.codigo }}
-                    </span>
+                    <img
+                        src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
+                        class="flag-mobile-goleador"
+                    >
 
+                    {{ item.equipo_goleador_info.codigo }}
                 </div>
 
                 <hr class="my-2">
