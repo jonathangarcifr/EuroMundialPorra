@@ -11,6 +11,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from .choices import TODOS_EQUIPOS, EQUIPOS_INFO, BOMBO_1, BOMBO_2, BOMBO_3, BOMBO_4, BOMBO_5, BOMBO_6
+import unicodedata
 
 def inicio(request):
     return render(request, "apuestas/inicio.html")
@@ -36,6 +37,13 @@ def obtener_info_equipo(nombre):
         "flag": info.get("flag", ""),
     }
 
+def clave_orden_nombre(nombre):
+    return (
+        unicodedata.normalize("NFKD", nombre)
+        .encode("ASCII", "ignore")
+        .decode("ASCII")
+        .lower()
+    )
 
 def ver_apuestas(request):
     import unicodedata
@@ -348,40 +356,49 @@ def clasificacion(request):
 def obtener_datos_clasificacion():
     apuestas = Apuesta.objects.all()
 
+    puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
+
     clasificacion_data = []
 
     for apuesta in apuestas:
-        (
-            puntos_equipos,
-            puntos_goleador,
-            puntos_totales,
-            detalle_equipos,
-        ) = calcular_puntos_apuesta(apuesta)
+        puntos_equipos, puntos_goleador, puntos_totales, _ = calcular_puntos_apuesta(
+            apuesta,
+            puntos_equipos_globales,
+            puntos_goleadores_globales,
+        )
 
-        equipos = []
-
-        for i in range(1, 13):
-            nombre_equipo = getattr(apuesta, f"equipo_{i}")
-            info = obtener_info_equipo(nombre_equipo)
-            equipos.append(info)
+        equipos = [
+            obtener_info_equipo(getattr(apuesta, f"equipo_{i}"))
+            for i in range(1, 13)
+        ]
 
         clasificacion_data.append({
             "apuesta": apuesta,
             "equipos": equipos,
-            "puntos_totales": puntos_totales,
             "equipo_goleador_info": obtener_info_equipo(apuesta.equipo_goleador),
-            "puntos_display": (
-                f"{puntos_equipos + puntos_goleador}"
-                f".{puntos_goleador:02d}"
-            ),
+            "puntos_totales": puntos_totales,
+            "puntos_display": f"{puntos_equipos + puntos_goleador}.{puntos_goleador:02d}",
         })
 
     clasificacion_data.sort(
         key=lambda x: (
             -x["puntos_totales"],
-            x["apuesta"].nombre.lower(),
+            clave_orden_nombre(x["apuesta"].nombre),
         )
     )
+
+    posicion = 0
+    posicion_real = 0
+    puntos_anteriores = None
+
+    for item in clasificacion_data:
+        posicion += 1
+
+        if puntos_anteriores != item["puntos_totales"]:
+            posicion_real = posicion
+
+        item["posicion"] = posicion_real
+        puntos_anteriores = item["puntos_totales"]
 
     return clasificacion_data
 
@@ -567,101 +584,113 @@ def calcular_puntos_apuesta(
     )
 
 @staff_member_required
+@staff_member_required
 def exportar_clasificacion_pdf(request):
     clasificacion_data = obtener_datos_clasificacion()
+    resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
+    fase_clasificacion = obtener_fase_clasificacion()
 
     response = HttpResponse(content_type="application/pdf")
-
-    fase_clasificacion = obtener_fase_clasificacion()    
-    nombre_fichero = (
-        f"EuroMundial_Porra_Clasificacion_{fase_clasificacion}.pdf"
-    )
-
     response["Content-Disposition"] = (
-        f'attachment; filename="{nombre_fichero}"'
+        f'attachment; filename="EuroMundial_Porra_Clasificacion_{fase_clasificacion}.pdf"'
     )
 
     doc = SimpleDocTemplate(
         response,
         pagesize=landscape(A4),
-        rightMargin=6,
-        leftMargin=6,
-        topMargin=12,
-        bottomMargin=12,
+        rightMargin=8,
+        leftMargin=8,
+        topMargin=8,
+        bottomMargin=8,
     )
 
-    styles = getSampleStyleSheet()
     elementos = []
 
-    titulo = Paragraph(
-        f"<b>EuroMundial Porra - Clasificación - {fase_clasificacion}</b>",
-        styles["Title"]
-    )
-    elementos.append(titulo)
-    elementos.append(Spacer(1, 10))
+    def puntos_pdf(valor):
+        return str(valor).replace(".", ",")
 
+    # Resumen superior
+    resumen_datos = [[
+        "",
+        "PUNTOS",
+        "EQUIPO 1", "EQUIPO 2", "EQUIPO 3", "EQUIPO 4",
+        "EQUIPO 5", "EQUIPO 6", "EQUIPO 7", "EQUIPO 8",
+        "EQUIPO 9", "EQUIPO 10", "EQUIPO 11", "EQUIPO 12",
+        "GOLEADOR",
+    ]]
+
+    for fila in resumen_ideal_cuchara:
+        resumen_datos.append([
+            fila["tipo"],
+            puntos_pdf(fila["puntos_display"] if "puntos_display" in fila else f"{fila['puntos']:.2f}"),
+            *[equipo["nombre"] for equipo in fila["equipos"]],
+            fila["goleador"]["jugador"] if fila.get("goleador") else "-",
+        ])
+
+    tabla_resumen = Table(
+        resumen_datos,
+        repeatRows=1,
+        colWidths=[76, 38] + [45] * 12 + [80],
+    )
+
+    tabla_resumen.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.7, colors.black),
+        ("BACKGROUND", (1, 0), (-1, 0), colors.HexColor("#f6b26b")),
+        ("BACKGROUND", (1, 1), (1, -1), colors.yellow),
+        ("BACKGROUND", (-1, 1), (-1, -1), colors.HexColor("#fce5cd")),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 5.2),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+
+    elementos.append(tabla_resumen)
+    elementos.append(Spacer(1, 8))
+
+    # Clasificación principal
     cabecera = [
-        "Pos",
-        "Nombre",
-        "E1", "E2", "E3", "E4", "E5", "E6",
-        "E7", "E8", "E9", "E10", "E11", "E12",
-        "Goleador",
-        "Puntos",
+        fase_clasificacion,
+        "PARTICIPANTE",
+        "PUNTOS",
+        "EQUIPO 1", "EQUIPO 2", "EQUIPO 3", "EQUIPO 4",
+        "EQUIPO 5", "EQUIPO 6", "EQUIPO 7", "EQUIPO 8",
+        "EQUIPO 9", "EQUIPO 10", "EQUIPO 11", "EQUIPO 12",
+        "GOLEADOR",
     ]
 
     datos = [cabecera]
 
-    for posicion, item in enumerate(clasificacion_data, start=1):
+    for item in clasificacion_data:
         apuesta = item["apuesta"]
 
-        fila = [
-            str(posicion),
+        datos.append([
+            item["posicion"],
             apuesta.nombre,
-        ]
-
-        for equipo in item["equipos"]:
-            fila.append(equipo["nombre"])
-
-        fila.extend([
-            f"{apuesta.goleador} - {apuesta.equipo_goleador}",
-            item["puntos_display"],
+            puntos_pdf(item["puntos_display"]),
+            *[equipo["nombre"] for equipo in item["equipos"]],
+            apuesta.goleador,
         ])
-
-        datos.append(fila)
 
     tabla = Table(
         datos,
         repeatRows=1,
-        colWidths=[
-            18,   # Pos
-            62,   # Nombre
-            45, 45, 45, 45, 45, 45,
-            45, 45, 45, 45, 45, 45,
-            105,  # Goleador
-            35,   # Puntos
-        ],
+        colWidths=[22, 84, 38] + [45] * 12 + [82],
     )
 
     tabla.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0d6efd")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.55, colors.black),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f6b26b")),
+        ("BACKGROUND", (2, 1), (2, -1), colors.yellow),
+        ("BACKGROUND", (-1, 1), (-1, -1), colors.HexColor("#fce5cd")),
         ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 6.2),
+        ("FONTNAME", (0, 1), (2, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 4.7),
         ("ALIGN", (0, 0), (-1, -1), "CENTER"),
         ("ALIGN", (1, 1), (1, -1), "LEFT"),
-        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d0d7de")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [
-            colors.white,
-            colors.HexColor("#f8fbfd"),
-        ]),
-        ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
-        ("FONTNAME", (-1, 1), (-1, -1), "Helvetica-Bold"),
-        ("TEXTCOLOR", (-1, 1), (-1, -1), colors.HexColor("#0d6efd")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ]))
 
     elementos.append(tabla)
-
     doc.build(elementos)
 
     return response
