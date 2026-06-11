@@ -216,19 +216,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!buscador) return;
 
+    function normalizar(texto) {
+        return texto
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+    }
+
     buscador.addEventListener("input", function () {
-        const texto = buscador.value.toLowerCase();
+        const texto = normalizar(buscador.value);
 
         document.querySelectorAll(".apuesta-mobile-card").forEach(function (card) {
-            const nombre = card.dataset.nombre || "";
+            const nombre = normalizar(card.dataset.nombre || "");
             card.style.display = nombre.includes(texto) ? "" : "none";
         });
 
         document.querySelectorAll(".apuestas-table tbody tr").forEach(function (row) {
-            const nombre = row.querySelector("td");
+            const nombre = row.querySelector("td:nth-child(2)");
+
             if (!nombre) return;
 
-            row.style.display = nombre.textContent.toLowerCase().includes(texto) ? "" : "none";
+            row.style.display = normalizar(nombre.textContent).includes(texto) ? "" : "none";
         });
     });
 });

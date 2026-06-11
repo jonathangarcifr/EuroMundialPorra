@@ -38,7 +38,15 @@ def obtener_info_equipo(nombre):
 
 
 def ver_apuestas(request):
-    apuestas = Apuesta.objects.all().order_by(Lower("nombre"))
+    import unicodedata
+
+    apuestas = sorted(
+        Apuesta.objects.all(),
+        key=lambda a: unicodedata.normalize("NFKD", a.nombre)
+        .encode("ASCII", "ignore")
+        .decode("ASCII")
+        .lower()
+    )
 
     leyenda = [
         obtener_info_equipo(nombre)
@@ -254,7 +262,15 @@ def resultados(request):
 
 
 def clasificacion(request):
-    apuestas = Apuesta.objects.all().order_by("nombre")
+    import unicodedata
+
+    apuestas = sorted(
+        Apuesta.objects.all(),
+        key=lambda a: unicodedata.normalize("NFKD", a.nombre)
+        .encode("ASCII", "ignore")
+        .decode("ASCII")
+        .lower()
+    )
 
     clasificacion_data = []
 
