@@ -313,7 +313,10 @@ def clasificacion(request):
     clasificacion_data.sort(
         key=lambda x: (
             -x["puntos_totales"],
-            x["apuesta"].nombre.lower(),
+            unicodedata.normalize("NFKD", x["apuesta"].nombre)
+            .encode("ASCII", "ignore")
+            .decode("ASCII")
+            .lower(),
         )
     )
 
