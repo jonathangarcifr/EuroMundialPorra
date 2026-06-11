@@ -52,6 +52,7 @@
             <table class="table table-bordered table-striped table-hover align-middle table-sm apuestas-table">
                 <thead class="table-primary">
                     <tr>
+                        <th>#</th>
                         <th>Nombre</th>
                         {% if request.user.is_staff %}
                             <th>Pagado</th>
@@ -79,7 +80,13 @@
                     {% for item in apuestas_preparadas %}
                         {% with apuesta=item.apuesta %}
                         <tr>
-                            <td class="fw-bold text-start">{{ apuesta.nombre }}</td>
+                            <td class="fw-bold">
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td class="fw-bold text-start">
+                                {{ apuesta.nombre }}
+                            </td>
 
                             {% if request.user.is_staff %}
                             <td>
@@ -127,7 +134,7 @@
                         {% endwith %}
                     {% empty %}
                         <tr>
-                            <td colspan="16" class="text-center text-muted">
+                            <td colspan="20" class="text-center text-muted">
                                 No hay apuestas todavía.
                             </td>
                         </tr>
@@ -148,6 +155,10 @@
                 <div class="text-center">
 
                     <div class="apuesta-mobile-nombre">
+                        <span class="badge bg-secondary badge-posicion me-1">
+                            #{{ forloop.counter }}
+                        </span>
+
                         {{ apuesta.nombre }}
                     </div>
 
