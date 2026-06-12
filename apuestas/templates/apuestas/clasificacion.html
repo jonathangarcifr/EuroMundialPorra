@@ -105,9 +105,8 @@
 
                 <div class="apuesta-mobile-goleador">
                     {% if fila.goleador %}
-                        {{ fila.goleador.jugador }}
                         <img src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png">
-                        {{ fila.goleador.equipo_info.codigo }}
+                        {{ fila.goleador.jugador }}
                     {% else %}
                         -
                     {% endif %}
@@ -186,7 +185,7 @@
                                     {% elif item.posicion == 3 %}
                                         🥉
                                     {% else %}
-                                        <span class="badge bg-secondary">
+                                        <span class="badge bg-secondary badge-posicion me-1">
                                             {{ item.posicion }}
                                         </span>
                                     {% endif %}
@@ -254,7 +253,7 @@
                         {% elif item.posicion == 3 %}
                             🥉
                         {% else %}
-                            <span class="badge bg-secondary">
+                            <span class="badge bg-secondary badge-posicion me-1">
                                 {{ item.posicion }}
                             </span>
                         {% endif %}
@@ -265,19 +264,15 @@
 
                 <hr class="my-2">
 
-                <div class="apuesta-mobile-goleador text-center">
-
-                    {{ item.apuesta.goleador }}
+                <div class="apuesta-mobile-goleador">
 
                     {% if item.equipo_goleador_info %}
-                        <span class="ms-1">
-                            <img
-                                src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
-                                style="width:18px;height:12px;"
-                            >
-                            {{ item.equipo_goleador_info.codigo }}
-                        </span>
+                        <img
+                            src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
+                        >
                     {% endif %}
+
+                    {{ item.apuesta.goleador }}
 
                 </div>
 
