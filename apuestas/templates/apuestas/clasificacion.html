@@ -54,10 +54,8 @@
 
                             {% for equipo in fila.equipos %}
                                 <td>
-                                    <span
-                                        class="equipo-mini"
-                                        title="{{ equipo.nombre }} - {{ equipo.puntos }} puntos"
-                                    >
+                                    <span class="equipo-mini {% if equipo.info.eliminado %}equipo-eliminado{% endif %}" 
+                                    title="{{ equipo.nombre }} - {{ equipo.puntos }} puntos">
                                         <img src="https://flagcdn.com/w20/{{ equipo.info.flag }}.png" alt="{{ equipo.nombre }}">
                                         {{ equipo.info.codigo }}
                                     </span>
@@ -67,7 +65,7 @@
                             <td class="fw-bold">
                                 {% if fila.goleador %}
 
-                                    <span class="equipo-mini">
+                                    <span class="equipo-mini {% if fila.goleador.equipo_info.eliminado %}equipo-eliminado{% endif %}">
                                         <img
                                             src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png"
                                             alt="{{ fila.goleador.equipo }}"
@@ -81,7 +79,7 @@
                             </td>
 
                             <td class="fw-bold text-primary">
-                                {{ fila.puntos }}
+                                {{ fila.puntos_display }}
                             </td>
                         </tr>
                     {% endfor %}
@@ -103,7 +101,7 @@
 
                 <hr class="my-2">
 
-                <div class="apuesta-mobile-goleador">
+                <div class="apuesta-mobile-goleador {% if fila.goleador.equipo_info.eliminado %}equipo-eliminado{% endif %}">
                     {% if fila.goleador %}
                         <img src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png">
                         {{ fila.goleador.jugador }}
@@ -116,7 +114,7 @@
 
                 <div class="apuesta-mobile-equipos">
                     {% for equipo in fila.equipos %}
-                        <div class="apuesta-mobile-equipo">
+                        <div class="apuesta-mobile-equipo {% if equipo.info.eliminado %}equipo-eliminado{% endif %}">
                             <img src="https://flagcdn.com/w20/{{ equipo.info.flag }}.png">
                             {{ equipo.info.codigo }}
                         </div>
@@ -127,7 +125,7 @@
 
                 <div class="text-center">
                     <span class="fw-bold text-primary">
-                        {{ fila.puntos|floatformat:2 }} puntos
+                        {{ fila.puntos_display }} puntos
                     </span>
                 </div>
 
@@ -198,7 +196,7 @@
                                 {% for equipo in item.equipos %}
                                     <td>
                                         <span
-                                            class="equipo-mini"
+                                            class="equipo-mini {% if equipo.eliminado %}equipo-eliminado{% endif %}"
                                             title="{{ equipo.nombre }}"
                                         >
                                             <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
@@ -209,7 +207,7 @@
 
                                 <td class="fw-semibold">
                                     <span>
-                                        <span class="equipo-mini">
+                                        <span class="equipo-mini {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% endif %}">
                                             <img
                                                 src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
                                                 alt="{{ item.equipo_goleador_info.nombre }}"
@@ -264,7 +262,7 @@
 
                 <hr class="my-2">
 
-                <div class="apuesta-mobile-goleador">
+                <div class="apuesta-mobile-goleador {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% endif %}">
 
                     {% if item.equipo_goleador_info %}
                         <img
@@ -280,7 +278,7 @@
 
                 <div class="apuesta-mobile-equipos">
                     {% for equipo in item.equipos %}
-                        <div class="apuesta-mobile-equipo">
+                        <div class="apuesta-mobile-equipo {% if equipo.eliminado %}equipo-eliminado{% endif %}">
                             <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
                             {{ equipo.codigo }}
                         </div>

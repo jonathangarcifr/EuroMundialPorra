@@ -4,13 +4,6 @@
 {% block contenido %}
 
 <div class="d-flex justify-content-end gap-2 mb-3">
-    {% if request.user.is_staff %}
-    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#nuevoPartidoModal">
-        <i class="bi bi-plus-circle"></i>
-        Nuevo partido
-    </button>
-    {% endif %}
-
     <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
         <i class="bi bi-arrow-left"></i>
         Volver
@@ -42,6 +35,12 @@
                     <div class="mb-3">
                         <label class="form-label">{{ partido_form.grupo.label }}</label>
                         {{ partido_form.grupo }}
+
+                        {% if partido_form.grupo.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ partido_form.grupo.errors.0 }}
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
@@ -108,185 +107,218 @@
             <div class="accordion-body">
                 <div class="row g-3">
 
-                    {% for item in jornada.partidos %}
-                    {% with partido=item.partido %}
+                    {% for slot in jornada.partidos %}
 
-                    <div class="col-md-6 col-lg-4 col-xl-3">
-                        <div class="match-card p-2 h-100">
+                        {% if slot.vacio %}
 
-                            <form method="post">
-                                {% csrf_token %}
-                                <input type="hidden" name="partido_id" value="{{ partido.id }}">
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <div class="match-card match-card-empty p-2 h-100 d-flex align-items-center justify-content-center">
 
-                                <div class="match-top-info">
-                                    <div class="match-date">
-                                        {% if partido.fecha_partido %}
-                                            {{ partido.fecha_partido|date:"d/m/Y H:i" }}
-                                        {% else %}
-                                            Sin fecha
-                                        {% endif %}
-
-                                        {% if partido.grupo %}
-                                            - {{ partido.grupo }}
-                                        {% endif %}
-                                    </div>
-
-                                    <div>
-                                        {% if partido.jugado %}
-                                            <span class="status-dot status-ok" title="Finalizado">
-                                                <i class="bi bi-check-circle-fill"></i>
-                                            </span>
-                                        {% else %}
-                                            <span class="status-dot status-pending" title="Pendiente">
-                                                <i class="bi bi-clock-fill"></i>
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <div class="match-score-line mb-3">
-                                    <div class="team-name team-left" title="{{ partido.equipo_local }}">
-                                        <img
-                                            src="https://flagcdn.com/w20/{{ item.local_info.flag }}.png"
-                                            alt="{{ partido.equipo_local }}"
-                                            class="flag-match"
-                                        >
-                                        {{ partido.equipo_local }}
-                                    </div>
-
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        name="goles_local"
-                                        value="{{ partido.goles_local }}"
-                                        class="form-control form-control-sm resultado-input"
-                                        {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
-                                        required
-                                    >
-
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        name="goles_visitante"
-                                        value="{{ partido.goles_visitante }}"
-                                        class="form-control form-control-sm resultado-input"
-                                        {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
-                                        required
-                                    >
-
-                                    <div class="team-name team-right" title="{{ partido.equipo_visitante }}">
-                                        {{ partido.equipo_visitante }}
-                                        <img
-                                            src="https://flagcdn.com/w20/{{ item.visitante_info.flag }}.png"
-                                            alt="{{ partido.equipo_visitante }}"
-                                            class="flag-match"
-                                        >
-                                    </div>
-                                </div>
-
-                                <hr>
-
-                                <div class="d-flex justify-content-between align-items-center border rounded bg-white scorers-toggle mb-2">
-                                    <span>
-                                        <i class="bi bi-people-fill"></i>
-                                        Goleadores: {{ item.total_goleadores }}
-                                    </span>
-
-                                    {% if item.total_goleadores > 0 %}
+                                    {% if request.user.is_staff %}
                                         <button
-                                            class="btn btn-sm btn-outline-primary scorers-toggle-button"
                                             type="button"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target="#goleadores-{{ partido.id }}"
+                                            class="btn btn-outline-primary btn-lg rounded-circle"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#nuevoPartidoModal"
+                                            data-fase="{{ jornada.codigo }}"
+                                            title="Crear partido"
                                         >
                                             <i class="bi bi-plus-lg"></i>
                                         </button>
                                     {% else %}
-                                        <button class="btn btn-sm btn-outline-secondary scorers-toggle-button" type="button" disabled>
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
+                                        <span class="text-muted small">
+                                            Partido pendiente
+                                        </span>
                                     {% endif %}
+
                                 </div>
+                            </div>
 
-                                <div class="collapse" id="goleadores-{{ partido.id }}">
-                                    <div class="scorers-row mb-3">
+                        {% else %}
 
-                                        <div>
-                                            {% for goleador in item.goleadores_local %}
-                                                <input type="hidden" name="goleador_id" value="{{ goleador.id }}">
+                            {% with item=slot.item %}
+                            {% with partido=item.partido %}
 
-                                                <div class="scorer-line">
-                                                    <span class="scorer-name" title="{{ goleador.jugador }}">
-                                                        {{ goleador.jugador }}
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <div class="match-card p-2 h-100">
+
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="partido_id" value="{{ partido.id }}">
+
+                                        <div class="match-top-info">
+                                            <div class="match-date">
+                                                {% if partido.fecha_partido %}
+                                                    {{ partido.fecha_partido|date:"d/m/Y H:i" }}
+                                                {% else %}
+                                                    Sin fecha
+                                                {% endif %}
+
+                                                {% if partido.grupo %}
+                                                    - {{ partido.grupo }}
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                {% if partido.jugado %}
+                                                    <span class="status-dot status-ok" title="Finalizado">
+                                                        <i class="bi bi-check-circle-fill"></i>
                                                     </span>
-
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        name="goles_goleador_{{ goleador.id }}"
-                                                        value="{% if partido.jugado %}{{ goleador.goles }}{% endif %}"
-                                                        class="form-control form-control-sm scorer-input"
-                                                        {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
-                                                    >
-                                                </div>
-                                            {% empty %}
-                                            {% endfor %}
+                                                {% else %}
+                                                    <span class="status-dot status-pending" title="Pendiente">
+                                                        <i class="bi bi-clock-fill"></i>
+                                                    </span>
+                                                {% endif %}
+                                            </div>
                                         </div>
 
-                                        <div class="scorers-separator"></div>
+                                        <div class="match-score-line mb-3">
+                                            <div class="team-name team-left" title="{{ partido.equipo_local }}">
+                                                <img
+                                                    src="https://flagcdn.com/w20/{{ item.local_info.flag }}.png"
+                                                    alt="{{ partido.equipo_local }}"
+                                                    class="flag-match"
+                                                >
+                                                {{ item.local_info.codigo }}
+                                            </div>
 
-                                        <div>
-                                            {% for goleador in item.goleadores_visitante %}
-                                                <input type="hidden" name="goleador_id" value="{{ goleador.id }}">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                name="goles_local"
+                                                value="{{ partido.goles_local }}"
+                                                class="form-control form-control-sm resultado-input"
+                                                {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
+                                                required
+                                            >
 
-                                                <div class="scorer-line">
-                                                    <span class="scorer-name" title="{{ goleador.jugador }}">
-                                                        {{ goleador.jugador }}
-                                                    </span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                name="goles_visitante"
+                                                value="{{ partido.goles_visitante }}"
+                                                class="form-control form-control-sm resultado-input"
+                                                {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
+                                                required
+                                            >
 
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        name="goles_goleador_{{ goleador.id }}"
-                                                        value="{% if partido.jugado %}{{ goleador.goles }}{% endif %}"
-                                                        class="form-control form-control-sm scorer-input"
-                                                        {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
-                                                    >
-                                                </div>
-                                            {% empty %}
-                                            {% endfor %}
+                                            <div class="team-name team-right" title="{{ partido.equipo_visitante }}">
+                                                {{ item.visitante_info.codigo }}
+                                                <img
+                                                    src="https://flagcdn.com/w20/{{ item.visitante_info.flag }}.png"
+                                                    alt="{{ partido.equipo_visitante }}"
+                                                    class="flag-match"
+                                                >
+                                            </div>
                                         </div>
 
-                                    </div>
+                                        <hr>
+
+                                        <div class="d-flex justify-content-between align-items-center border rounded bg-white scorers-toggle mb-2">
+                                            <span>
+                                                <i class="bi bi-people-fill"></i>
+                                                Goleadores: {{ item.total_goleadores }}
+                                            </span>
+
+                                            {% if item.total_goleadores > 0 %}
+                                                <button
+                                                    class="btn btn-sm btn-outline-primary scorers-toggle-button"
+                                                    type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#goleadores-{{ partido.id }}"
+                                                >
+                                                    <i class="bi bi-plus-lg"></i>
+                                                </button>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-outline-secondary scorers-toggle-button" type="button" disabled>
+                                                    <i class="bi bi-plus-lg"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="collapse" id="goleadores-{{ partido.id }}">
+                                            <div class="scorers-row mb-3">
+
+                                                <div>
+                                                    {% for goleador in item.goleadores_local %}
+                                                        <input type="hidden" name="goleador_id" value="{{ goleador.id }}">
+
+                                                        <div class="scorer-line">
+                                                            <span class="scorer-name" title="{{ goleador.jugador }}">
+                                                                {{ goleador.jugador }}
+                                                            </span>
+
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                name="goles_goleador_{{ goleador.id }}"
+                                                                value="{{ goleador.goles }}"
+                                                                class="form-control form-control-sm scorer-input"
+                                                                {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
+                                                            >
+                                                        </div>
+                                                    {% empty %}
+                                                    {% endfor %}
+                                                </div>
+
+                                                <div class="scorers-separator"></div>
+
+                                                <div>
+                                                    {% for goleador in item.goleadores_visitante %}
+                                                        <input type="hidden" name="goleador_id" value="{{ goleador.id }}">
+
+                                                        <div class="scorer-line">
+                                                            <span class="scorer-name" title="{{ goleador.jugador }}">
+                                                                {{ goleador.jugador }}
+                                                            </span>
+
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                name="goles_goleador_{{ goleador.id }}"
+                                                                value="{{ goleador.goles }}"
+                                                                class="form-control form-control-sm scorer-input"
+                                                                {% if partido.jugado or not request.user.is_staff %}readonly{% endif %}
+                                                            >
+                                                        </div>
+                                                    {% empty %}
+                                                    {% endfor %}
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        {% if request.user.is_staff %}
+                                        <div class="d-flex gap-2 match-actions">
+                                            {% if not partido.jugado %}
+                                                <button type="submit" name="accion" value="confirmar" class="btn btn-primary btn-sm flex-fill">
+                                                    <i class="bi bi-save"></i>
+                                                    Confirmar
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-success btn-sm flex-fill" disabled>
+                                                    <i class="bi bi-lock-fill"></i>
+                                                    Confirmado
+                                                </button>
+
+                                                <button type="submit" name="accion" value="editar" class="btn btn-outline-warning btn-sm">
+                                                    <i class="bi bi-pencil"></i>
+                                                    Editar
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+
+                                    </form>
+
                                 </div>
+                            </div>
 
-                                {% if request.user.is_staff %}
-                                <div class="d-flex gap-2 match-actions">
-                                    {% if not partido.jugado %}
-                                        <button type="submit" name="accion" value="confirmar" class="btn btn-primary btn-sm flex-fill">
-                                            <i class="bi bi-save"></i>
-                                            Confirmar
-                                        </button>
-                                    {% else %}
-                                        <button type="button" class="btn btn-success btn-sm flex-fill" disabled>
-                                            <i class="bi bi-lock-fill"></i>
-                                            Confirmado
-                                        </button>
+                            {% endwith %}
+                            {% endwith %}
 
-                                        <button type="submit" name="accion" value="editar" class="btn btn-outline-warning btn-sm">
-                                            <i class="bi bi-pencil"></i>
-                                            Editar
-                                        </button>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
+                        {% endif %}
 
-                            </form>
-
-                        </div>
-                    </div>
-
-                    {% endwith %}
                     {% endfor %}
 
                 </div>
@@ -297,5 +329,39 @@
     {% endfor %}
 
 </div>
+
+{% if partido_form.errors %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("nuevoPartidoModal");
+
+    if (modal) {
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+    }
+});
+</script>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("nuevoPartidoModal");
+    const faseInput = document.getElementById("id_fase");
+
+    if (!modal || !faseInput) return;
+
+    modal.addEventListener("show.bs.modal", function (event) {
+        const button = event.relatedTarget;
+
+        if (!button) return;
+
+        const fase = button.getAttribute("data-fase");
+
+        if (fase) {
+            faseInput.value = fase;
+        }
+    });
+});
+</script>
 
 {% endblock %}

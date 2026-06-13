@@ -232,7 +232,8 @@ class PartidoForm(forms.ModelForm):
 
     grupo = forms.ChoiceField(
         choices=GRUPOS,
-        label="Grupo"
+        label="Grupo",
+        required=False,
     )
 
     class Meta:
@@ -256,6 +257,8 @@ class PartidoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fields["grupo"].required = False
+
         for field in self.fields.values():
             field.widget.attrs.update({
                 "class": "form-control",
@@ -265,8 +268,23 @@ class PartidoForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
+        fase = cleaned_data.get("fase")
+        grupo = cleaned_data.get("grupo")
+
         equipo_local = cleaned_data.get("equipo_local")
         equipo_visitante = cleaned_data.get("equipo_visitante")
+
+        fases_grupo = ["J1", "J2", "J3"]
+        fases_eliminatorias = ["1/16", "1/8", "1/4", "1/2", "FINAL"]
+
+        if fase in fases_grupo and not grupo:
+            self.add_error(
+                "grupo",
+                "Debe seleccionar un grupo para la fase de grupos."
+            )
+
+        if fase in fases_eliminatorias:
+            cleaned_data["grupo"] = ""
 
         if equipo_local and equipo_visitante and equipo_local == equipo_visitante:
             self.add_error(

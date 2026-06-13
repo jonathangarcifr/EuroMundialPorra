@@ -3,18 +3,50 @@ from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 from django.db.models import Prefetch
-from django.db.models.functions import Lower
+
 from .models import Partido, Apuesta, GoleadorPartido
 from .forms import ApuestaForm, PartidoForm
+from .choices import (
+    TODOS_EQUIPOS,
+    EQUIPOS_INFO,
+    BOMBO_1,
+    BOMBO_2,
+    BOMBO_3,
+    BOMBO_4,
+    BOMBO_5,
+    BOMBO_6,
+)
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from .choices import TODOS_EQUIPOS, EQUIPOS_INFO, BOMBO_1, BOMBO_2, BOMBO_3, BOMBO_4, BOMBO_5, BOMBO_6
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+
 import unicodedata
+
 
 def inicio(request):
     return render(request, "apuestas/inicio.html")
+
+
+def clave_orden_nombre(nombre):
+    return (
+        unicodedata.normalize("NFKD", nombre or "")
+        .encode("ASCII", "ignore")
+        .decode("ASCII")
+        .lower()
+    )
+
+
+def obtener_info_equipo(nombre, equipos_eliminados=None):
+    equipos_eliminados = equipos_eliminados or set()
+    info = EQUIPOS_INFO.get(nombre, {})
+
+    return {
+        "nombre": nombre,
+        "codigo": info.get("codigo", nombre[:3].upper()),
+        "flag": info.get("flag", ""),
+        "eliminado": nombre in equipos_eliminados,
+    }
 
 
 @staff_member_required
@@ -23,41 +55,24 @@ def nueva_apuesta(request):
         form = ApuestaForm(request.POST)
         if form.is_valid():
             form.save()
+            sincronizar_goleadores_partidos()
             return redirect("ver_apuestas")
     else:
         form = ApuestaForm()
 
     return render(request, "apuestas/formulario_apuesta.html", {"form": form})
 
-def obtener_info_equipo(nombre):
-    info = EQUIPOS_INFO.get(nombre, {})
-    return {
-        "nombre": nombre,
-        "codigo": info.get("codigo", nombre[:3].upper()),
-        "flag": info.get("flag", ""),
-    }
-
-def clave_orden_nombre(nombre):
-    return (
-        unicodedata.normalize("NFKD", nombre)
-        .encode("ASCII", "ignore")
-        .decode("ASCII")
-        .lower()
-    )
 
 def ver_apuestas(request):
-    import unicodedata
+    equipos_eliminados = obtener_equipos_eliminados()
 
     apuestas = sorted(
         Apuesta.objects.all(),
-        key=lambda a: unicodedata.normalize("NFKD", a.nombre)
-        .encode("ASCII", "ignore")
-        .decode("ASCII")
-        .lower()
+        key=lambda a: clave_orden_nombre(a.nombre),
     )
 
     leyenda = [
-        obtener_info_equipo(nombre)
+        obtener_info_equipo(nombre, equipos_eliminados)
         for nombre, _ in TODOS_EQUIPOS
     ]
 
@@ -65,14 +80,17 @@ def ver_apuestas(request):
 
     for apuesta in apuestas:
         equipos = [
-            obtener_info_equipo(getattr(apuesta, f"equipo_{i}"))
+            obtener_info_equipo(getattr(apuesta, f"equipo_{i}"), equipos_eliminados)
             for i in range(1, 13)
         ]
 
         apuestas_preparadas.append({
             "apuesta": apuesta,
             "equipos": equipos,
-            "equipo_goleador_info": obtener_info_equipo(apuesta.equipo_goleador),
+            "equipo_goleador_info": obtener_info_equipo(
+                apuesta.equipo_goleador,
+                equipos_eliminados,
+            ),
         })
 
     return render(
@@ -81,7 +99,7 @@ def ver_apuestas(request):
         {
             "leyenda": leyenda,
             "apuestas_preparadas": apuestas_preparadas,
-        }
+        },
     )
 
 
@@ -93,6 +111,7 @@ def editar_apuesta(request, apuesta_id):
         form = ApuestaForm(request.POST, instance=apuesta)
         if form.is_valid():
             form.save()
+            sincronizar_goleadores_partidos()
             return redirect("ver_apuestas")
     else:
         form = ApuestaForm(instance=apuesta)
@@ -119,7 +138,7 @@ def sincronizar_goleadores_partidos():
         GoleadorPartido.objects.values_list(
             "partido_id",
             "jugador",
-            "equipo"
+            "equipo",
         )
     )
 
@@ -206,8 +225,6 @@ def resultados(request):
 
                 return redirect(f"{reverse('resultados')}?fase={partido.fase}")
 
-    sincronizar_goleadores_partidos()
-
     jornadas = []
 
     for codigo_fase, nombre_fase in Partido.FASES:
@@ -218,7 +235,7 @@ def resultados(request):
                 Prefetch(
                     "goleadores",
                     queryset=GoleadorPartido.objects.order_by("jugador"),
-                    to_attr="goleadores_prefetch"
+                    to_attr="goleadores_prefetch",
                 )
             )
             .order_by("fecha_partido", "id")
@@ -246,12 +263,32 @@ def resultados(request):
                 "total_goleadores": len(goleadores_local) + len(goleadores_visitante),
             })
 
-        if partidos_preparados:
-            jornadas.append({
-                "codigo": codigo_fase,
-                "nombre": nombre_fase,
-                "partidos": partidos_preparados,
-            })
+        total_esperado = PARTIDOS_ESPERADOS_RESULTADOS.get(
+            codigo_fase,
+            len(partidos_preparados)
+        )
+
+        slots = []
+
+        for index in range(total_esperado):
+            if index < len(partidos_preparados):
+                slots.append({
+                    "vacio": False,
+                    "item": partidos_preparados[index],
+                    "numero": index + 1,
+                })
+            else:
+                slots.append({
+                    "vacio": True,
+                    "item": None,
+                    "numero": index + 1,
+                })
+
+        jornadas.append({
+            "codigo": codigo_fase,
+            "nombre": nombre_fase,
+            "partidos": slots,
+        })
 
     fase_activa = request.GET.get("fase")
 
@@ -265,19 +302,16 @@ def resultados(request):
             "jornadas": jornadas,
             "partido_form": partido_form,
             "fase_activa": fase_activa,
-        }
+        },
     )
 
 
 def clasificacion(request):
-    import unicodedata
+    equipos_eliminados = obtener_equipos_eliminados()
 
     apuestas = sorted(
         Apuesta.objects.all(),
-        key=lambda a: unicodedata.normalize("NFKD", a.nombre)
-        .encode("ASCII", "ignore")
-        .decode("ASCII")
-        .lower()
+        key=lambda a: clave_orden_nombre(a.nombre),
     )
 
     puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
@@ -289,25 +323,27 @@ def clasificacion(request):
             puntos_equipos,
             puntos_goleador,
             puntos_totales,
-            detalle_equipos,
+            _,
         ) = calcular_puntos_apuesta(
-                apuesta,
-                puntos_equipos_globales,
-                puntos_goleadores_globales
-            )
+            apuesta,
+            puntos_equipos_globales,
+            puntos_goleadores_globales,
+        )
 
         equipos = []
 
         for i in range(1, 13):
             nombre_equipo = getattr(apuesta, f"equipo_{i}")
-            info = obtener_info_equipo(nombre_equipo)
-            equipos.append(info)
+            equipos.append(
+                obtener_info_equipo(nombre_equipo, equipos_eliminados)
+            )
 
         clasificacion_data.append({
             "apuesta": apuesta,
             "equipos": equipos,
             "equipo_goleador_info": obtener_info_equipo(
-                apuesta.equipo_goleador
+                apuesta.equipo_goleador,
+                equipos_eliminados,
             ),
             "puntos_equipos": puntos_equipos,
             "puntos_goleador": puntos_goleador,
@@ -321,13 +357,25 @@ def clasificacion(request):
     clasificacion_data.sort(
         key=lambda x: (
             -x["puntos_totales"],
-            unicodedata.normalize("NFKD", x["apuesta"].nombre)
-            .encode("ASCII", "ignore")
-            .decode("ASCII")
-            .lower(),
+            clave_orden_nombre(x["apuesta"].nombre),
         )
     )
 
+    asignar_posiciones(clasificacion_data)
+
+    resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
+
+    return render(
+        request,
+        "apuestas/clasificacion.html",
+        {
+            "clasificacion": clasificacion_data,
+            "resumen_ideal_cuchara": resumen_ideal_cuchara,
+        },
+    )
+
+
+def asignar_posiciones(clasificacion_data):
     posicion = 0
     posicion_real = 0
     puntos_anteriores = None
@@ -339,21 +387,11 @@ def clasificacion(request):
             posicion_real = posicion
 
         item["posicion"] = posicion_real
-
         puntos_anteriores = item["puntos_totales"]
 
-    resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
-
-    return render(
-        request,
-        "apuestas/clasificacion.html",
-        {
-            "clasificacion": clasificacion_data,
-            "resumen_ideal_cuchara": resumen_ideal_cuchara,
-        }
-    )
 
 def obtener_datos_clasificacion():
+    equipos_eliminados = obtener_equipos_eliminados()
     apuestas = Apuesta.objects.all()
 
     puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
@@ -368,16 +406,25 @@ def obtener_datos_clasificacion():
         )
 
         equipos = [
-            obtener_info_equipo(getattr(apuesta, f"equipo_{i}"))
+            obtener_info_equipo(
+                getattr(apuesta, f"equipo_{i}"),
+                equipos_eliminados,
+            )
             for i in range(1, 13)
         ]
 
         clasificacion_data.append({
             "apuesta": apuesta,
             "equipos": equipos,
-            "equipo_goleador_info": obtener_info_equipo(apuesta.equipo_goleador),
+            "equipo_goleador_info": obtener_info_equipo(
+                apuesta.equipo_goleador,
+                equipos_eliminados,
+            ),
             "puntos_totales": puntos_totales,
-            "puntos_display": f"{puntos_equipos + puntos_goleador}.{puntos_goleador:02d}",
+            "puntos_display": (
+                f"{puntos_equipos + puntos_goleador}"
+                f".{puntos_goleador:02d}"
+            ),
         })
 
     clasificacion_data.sort(
@@ -387,20 +434,10 @@ def obtener_datos_clasificacion():
         )
     )
 
-    posicion = 0
-    posicion_real = 0
-    puntos_anteriores = None
-
-    for item in clasificacion_data:
-        posicion += 1
-
-        if puntos_anteriores != item["puntos_totales"]:
-            posicion_real = posicion
-
-        item["posicion"] = posicion_real
-        puntos_anteriores = item["puntos_totales"]
+    asignar_posiciones(clasificacion_data)
 
     return clasificacion_data
+
 
 PUNTOS_FASE = {
     "J1": {"victoria": 3, "empate": 2, "derrota": 1},
@@ -435,6 +472,7 @@ FASE_TEMPLATE = {
     "FINAL": "FINAL",
 }
 
+
 def crear_diccionario_fases():
     return {
         "J1": {"valor": 0, "activa": False},
@@ -466,16 +504,8 @@ def calcular_puntuaciones_globales():
             continue
 
         equipos_partido = [
-            (
-                partido.equipo_local,
-                partido.goles_local,
-                partido.goles_visitante,
-            ),
-            (
-                partido.equipo_visitante,
-                partido.goles_visitante,
-                partido.goles_local,
-            ),
+            (partido.equipo_local, partido.goles_local, partido.goles_visitante),
+            (partido.equipo_visitante, partido.goles_visitante, partido.goles_local),
         ]
 
         for equipo, goles_favor, goles_contra in equipos_partido:
@@ -498,10 +528,7 @@ def calcular_puntuaciones_globales():
             puntos_equipos[equipo][clave_fase]["valor"] += puntos_partido
 
         for goleador in partido.goleadores.all():
-            clave_goleador = (
-                goleador.jugador,
-                goleador.equipo,
-            )
+            clave_goleador = (goleador.jugador, goleador.equipo)
 
             if clave_goleador not in puntos_goleadores:
                 puntos_goleadores[clave_goleador] = crear_diccionario_fases()
@@ -529,16 +556,24 @@ def calcular_puntuaciones_globales():
 def calcular_puntos_apuesta(
     apuesta,
     puntos_equipos_globales=None,
-    puntos_goleadores_globales=None
+    puntos_goleadores_globales=None,
 ):
     if puntos_equipos_globales is None or puntos_goleadores_globales is None:
         puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
 
     equipos_apostados = [
-        apuesta.equipo_1, apuesta.equipo_2, apuesta.equipo_3,
-        apuesta.equipo_4, apuesta.equipo_5, apuesta.equipo_6,
-        apuesta.equipo_7, apuesta.equipo_8, apuesta.equipo_9,
-        apuesta.equipo_10, apuesta.equipo_11, apuesta.equipo_12,
+        apuesta.equipo_1,
+        apuesta.equipo_2,
+        apuesta.equipo_3,
+        apuesta.equipo_4,
+        apuesta.equipo_5,
+        apuesta.equipo_6,
+        apuesta.equipo_7,
+        apuesta.equipo_8,
+        apuesta.equipo_9,
+        apuesta.equipo_10,
+        apuesta.equipo_11,
+        apuesta.equipo_12,
     ]
 
     puntos_equipos = 0
@@ -547,7 +582,7 @@ def calcular_puntos_apuesta(
     for equipo in equipos_apostados:
         puntos_equipo = puntos_equipos_globales.get(
             equipo,
-            crear_diccionario_fases()
+            crear_diccionario_fases(),
         )
 
         total_equipo = puntos_equipo.get("TOTAL", 0)
@@ -559,7 +594,7 @@ def calcular_puntos_apuesta(
                 fase: datos["valor"]
                 for fase, datos in puntos_equipo.items()
                 if fase != "TOTAL" and datos["valor"] > 0
-            }
+            },
         }
 
     puntos_goleador = puntos_goleadores_globales.get(
@@ -567,7 +602,7 @@ def calcular_puntos_apuesta(
             apuesta.goleador,
             apuesta.equipo_goleador,
         ),
-        crear_diccionario_fases()
+        crear_diccionario_fases(),
     ).get("TOTAL", 0)
 
     puntos_totales = (
@@ -583,7 +618,7 @@ def calcular_puntos_apuesta(
         detalle_equipos,
     )
 
-@staff_member_required
+
 @staff_member_required
 def exportar_clasificacion_pdf(request):
     clasificacion_data = obtener_datos_clasificacion()
@@ -609,7 +644,6 @@ def exportar_clasificacion_pdf(request):
     def puntos_pdf(valor):
         return str(valor).replace(".", ",")
 
-    # Resumen superior
     resumen_datos = [[
         "",
         "PUNTOS",
@@ -622,7 +656,7 @@ def exportar_clasificacion_pdf(request):
     for fila in resumen_ideal_cuchara:
         resumen_datos.append([
             fila["tipo"],
-            puntos_pdf(fila["puntos_display"] if "puntos_display" in fila else f"{fila['puntos']:.2f}"),
+            puntos_pdf(f"{fila['puntos']:.2f}"),
             *[equipo["nombre"] for equipo in fila["equipos"]],
             fila["goleador"]["jugador"] if fila.get("goleador") else "-",
         ])
@@ -647,7 +681,6 @@ def exportar_clasificacion_pdf(request):
     elementos.append(tabla_resumen)
     elementos.append(Spacer(1, 8))
 
-    # Clasificación principal
     cabecera = [
         fase_clasificacion,
         "PARTICIPANTE",
@@ -695,6 +728,7 @@ def exportar_clasificacion_pdf(request):
 
     return response
 
+
 def obtener_fase_clasificacion():
     fases = Partido.FASES
 
@@ -715,6 +749,7 @@ def obtener_fase_clasificacion():
 
     return ultima_fase_completa or "Sin partidos finalizados"
 
+
 def calcular_puntos_equipo_por_fase(nombre_equipo, puntos_equipos=None):
     if puntos_equipos is None:
         puntos_equipos, _ = calcular_puntuaciones_globales()
@@ -731,7 +766,7 @@ def calcular_puntos_goleador_por_fase(nombre_jugador, nombre_equipo, puntos_gole
 
     puntos = puntos_goleadores.get(
         (nombre_jugador, nombre_equipo),
-        crear_diccionario_fases()
+        crear_diccionario_fases(),
     )
 
     puntos["TOTAL"] = puntos.get("TOTAL", 0)
@@ -750,10 +785,11 @@ def puntuaciones(request):
     ]
 
     puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
-
-    conteo_selecciones = {}
+    equipos_eliminados = obtener_equipos_eliminados()
 
     apuestas = Apuesta.objects.all()
+
+    conteo_selecciones = {}
 
     for apuesta in apuestas:
         for i in range(1, 13):
@@ -768,10 +804,11 @@ def puntuaciones(request):
         equipos_del_bombo = []
 
         for nombre_equipo, _ in equipos_ordenados:
-            info = obtener_info_equipo(nombre_equipo)
+            info = obtener_info_equipo(nombre_equipo, equipos_eliminados)
+
             puntos = calcular_puntos_equipo_por_fase(
                 nombre_equipo,
-                puntos_equipos_globales
+                puntos_equipos_globales,
             )
 
             equipos_del_bombo.append({
@@ -793,15 +830,12 @@ def puntuaciones(request):
             apuesta.equipo_goleador,
         )
 
-        conteo_goleadores[clave] = (
-            conteo_goleadores.get(clave, 0) + 1
-        )
+        conteo_goleadores[clave] = conteo_goleadores.get(clave, 0) + 1
 
     goleadores_elegidos = (
         Apuesta.objects
         .values("goleador", "equipo_goleador")
         .distinct()
-        .order_by("equipo_goleador", "goleador")
     )
 
     goleadores = []
@@ -810,10 +844,13 @@ def puntuaciones(request):
         puntos = calcular_puntos_goleador_por_fase(
             item["goleador"],
             item["equipo_goleador"],
-            puntos_goleadores_globales
+            puntos_goleadores_globales,
         )
 
-        equipo_info = obtener_info_equipo(item["equipo_goleador"])
+        equipo_info = obtener_info_equipo(
+            item["equipo_goleador"],
+            equipos_eliminados,
+        )
 
         goleadores.append({
             "jugador": item["goleador"],
@@ -829,7 +866,7 @@ def puntuaciones(request):
         })
 
     goleadores.sort(
-        key=lambda x: x["jugador"].lower()
+        key=lambda x: clave_orden_nombre(x["jugador"])
     )
 
     return render(
@@ -838,12 +875,13 @@ def puntuaciones(request):
         {
             "bombos_puntuaciones": bombos_puntuaciones,
             "goleadores": goleadores,
-        }
+        },
     )
 
 def obtener_resumen_ideal_cuchara():
     bombos = [BOMBO_1, BOMBO_2, BOMBO_3, BOMBO_4, BOMBO_5, BOMBO_6]
 
+    equipos_eliminados = obtener_equipos_eliminados()
     puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
 
     goleadores_elegidos = (
@@ -858,74 +896,153 @@ def obtener_resumen_ideal_cuchara():
         puntos_goleador = calcular_puntos_goleador_por_fase(
             item["goleador"],
             item["equipo_goleador"],
-            puntos_goleadores_globales
+            puntos_goleadores_globales,
         )["TOTAL"]
 
         goleadores.append({
             "jugador": item["goleador"],
             "equipo": item["equipo_goleador"],
-            "equipo_info": obtener_info_equipo(item["equipo_goleador"]),
+            "equipo_info": obtener_info_equipo(
+                item["equipo_goleador"],
+                equipos_eliminados,
+            ),
             "puntos": puntos_goleador,
         })
 
-    filas = []
+    equipos_por_bombo = []
 
-    for tipo in ["APUESTA IDEAL", "CUCHARA DE MADERA"]:
-        equipos_finales = []
-        puntos_total = 0
+    for bombo in bombos:
+        equipos_bombo = []
 
-        for bombo in bombos:
-            equipos_bombo = []
+        for nombre_equipo, _ in bombo:
+            puntos = calcular_puntos_equipo_por_fase(
+                nombre_equipo,
+                puntos_equipos_globales,
+            )["TOTAL"]
 
-            for nombre_equipo, _ in bombo:
-                puntos = calcular_puntos_equipo_por_fase(
+            equipos_bombo.append({
+                "nombre": nombre_equipo,
+                "info": obtener_info_equipo(
                     nombre_equipo,
-                    puntos_equipos_globales
-                )["TOTAL"]
-                info = obtener_info_equipo(nombre_equipo)
+                    equipos_eliminados,
+                ),
+                "puntos": puntos,
+            })
 
-                equipos_bombo.append({
-                    "nombre": nombre_equipo,
-                    "info": info,
-                    "puntos": puntos,
-                })
+        equipos_por_bombo.append(equipos_bombo)
+
+    def construir_fila(tipo):
+        mejor = None
+
+        for goleador in goleadores:
+            equipos_finales = []
+            puntos_equipos = 0
+
+            for equipos_bombo in equipos_por_bombo:
+                equipos_validos = [
+                    equipo for equipo in equipos_bombo
+                    if equipo["nombre"] != goleador["equipo"]
+                ]
+
+                if tipo == "APUESTA IDEAL":
+                    seleccionados = sorted(
+                        equipos_validos,
+                        key=lambda x: (
+                            -x["puntos"],
+                            clave_orden_nombre(x["nombre"]),
+                        )
+                    )[:2]
+                else:
+                    seleccionados = sorted(
+                        equipos_validos,
+                        key=lambda x: (
+                            x["puntos"],
+                            clave_orden_nombre(x["nombre"]),
+                        )
+                    )[:2]
+
+                seleccionados = sorted(
+                    seleccionados,
+                    key=lambda x: clave_orden_nombre(x["nombre"])
+                )
+
+                equipos_finales.extend(seleccionados)
+                puntos_equipos += sum(equipo["puntos"] for equipo in seleccionados)
+
+            puntos_total = puntos_equipos + goleador["puntos"]
+
+            candidato = {
+                "tipo": tipo,
+                "equipos": equipos_finales,
+                "goleador": goleador,
+                "puntos": puntos_total,
+                "puntos_goleador": goleador["puntos"],
+                "puntos_display": (
+                    f"{puntos_total}"
+                    f".{goleador['puntos']:02d}"
+                ),
+                "puntos_totales_orden": puntos_total + (goleador["puntos"] / 100),
+            }
+
+            if mejor is None:
+                mejor = candidato
+                continue
 
             if tipo == "APUESTA IDEAL":
-                seleccionados = sorted(
-                    equipos_bombo,
-                    key=lambda x: (-x["puntos"], x["nombre"])
-                )[:2]
-
-                goleador = sorted(
-                    goleadores,
-                    key=lambda x: (-x["puntos"], x["jugador"])
-                )[0] if goleadores else None
-
+                if candidato["puntos_totales_orden"] > mejor["puntos_totales_orden"]:
+                    mejor = candidato
             else:
-                seleccionados = sorted(
-                    equipos_bombo,
-                    key=lambda x: (x["puntos"], x["nombre"])
-                )[:2]
+                if candidato["puntos_totales_orden"] < mejor["puntos_totales_orden"]:
+                    mejor = candidato
 
-                goleador = sorted(
-                    goleadores,
-                    key=lambda x: (x["puntos"], x["jugador"])
-                )[0] if goleadores else None
+        return mejor
 
-            seleccionados = sorted(seleccionados, key=lambda x: x["nombre"])
+    return [
+        construir_fila("APUESTA IDEAL"),
+        construir_fila("CUCHARA DE MADERA"),
+    ]
 
-            equipos_finales.extend(seleccionados)
-            puntos_total += sum(equipo["puntos"] for equipo in seleccionados)
+PARTIDOS_ESPERADOS_FASE = {
+    "1/16": 16,
+    "1/8": 8,
+    "1/4": 4,
+    "1/2": 2,
+    "FINAL": 1,
+}
 
-            if goleador:
-                puntos_total += goleador["puntos"]
+PARTIDOS_ESPERADOS_RESULTADOS = {
+    "J1": 24,
+    "J2": 24,
+    "J3": 24,
+    "1/16": 16,
+    "1/8": 8,
+    "1/4": 4,
+    "1/2": 2,
+    "FINAL": 1,
+}
 
-        filas.append({
-            "tipo": tipo,
-            "equipos": equipos_finales,
-            "goleador": goleador,
-            "puntos": puntos_total,
-        })
+FASES_ELIMINACION = ["1/16", "1/8", "1/4", "1/2", "FINAL"]
 
-    return filas
 
+def obtener_equipos_eliminados():
+    equipos_vivos = set(nombre for nombre, _ in TODOS_EQUIPOS)
+    equipos_eliminados = set()
+
+    for fase in FASES_ELIMINACION:
+        partidos_fase = Partido.objects.filter(fase=fase)
+
+        if partidos_fase.count() < PARTIDOS_ESPERADOS_FASE[fase]:
+            break
+
+        equipos_fase = set()
+
+        for partido in partidos_fase:
+            equipos_fase.add(partido.equipo_local)
+            equipos_fase.add(partido.equipo_visitante)
+
+        eliminados_en_fase = equipos_vivos - equipos_fase
+        equipos_eliminados.update(eliminados_en_fase)
+
+        equipos_vivos = equipos_fase
+
+    return equipos_eliminados

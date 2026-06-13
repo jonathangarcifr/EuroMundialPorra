@@ -42,7 +42,7 @@ class Partido(models.Model):
     ]
 
     fase = models.CharField(max_length=10, choices=FASES)
-    grupo = models.CharField(max_length=50, blank=True)
+    grupo = models.CharField(max_length=20, blank=True, null=True)
     fecha_partido = models.DateTimeField(null=True, blank=True)
 
     equipo_local = models.CharField(max_length=100)

@@ -365,19 +365,23 @@
         }
 
         .team-name {
-            font-size: 0.68rem;
-            font-weight: 700;
-            line-height: 1.05;
+            display: flex;
+            align-items: center;
+            flex: 1;
             min-width: 0;
+            font-size: 0.62rem;
+            font-weight: 700;
+            line-height: 1;
             overflow-wrap: break-word;
+            gap: 3px;
         }
 
         .team-left {
-            text-align: right;
+            justify-content: flex-end;
         }
 
         .team-right {
-            text-align: left;
+            justify-content: flex-start;
         }
 
         .flag-match {
@@ -385,8 +389,9 @@
             height: 12px;
             object-fit: cover;
             border: 1px solid #ddd;
-            margin: 0 4px;
-            vertical-align: middle;
+            margin: 0;
+            display: block;
+            flex-shrink: 0;
         }
 
         .resultado-input,
@@ -726,6 +731,18 @@
             padding: 0.18rem 0.38rem !important;
             line-height: 1;
             vertical-align: middle;
+        }
+
+        .equipo-eliminado {
+            opacity: 0.35;
+            text-decoration: line-through;
+            filter: grayscale(100%);
+        }
+
+        .match-card-empty {
+            min-height: 180px;
+            border: 2px dashed #c7d7ee;
+            background: #f8fbff;
         }
     </style>
 

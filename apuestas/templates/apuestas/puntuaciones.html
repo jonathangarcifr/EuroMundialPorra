@@ -53,7 +53,8 @@
                                     {% for item in bombo.equipos %}
                                         <tr>
                                             <td class="fw-bold text-start">
-                                                <span class="equipo-mini" title="{{ item.equipo.nombre }}">
+                                                <span class="equipo-mini {% if item.equipo.eliminado %}equipo-eliminado{% endif %}" 
+                                                title="{{ item.equipo.nombre }}">
                                                     <img src="https://flagcdn.com/w20/{{ item.equipo.flag }}.png" alt="{{ item.equipo.nombre }}">
                                                     {{ item.equipo.codigo }}
 
@@ -110,7 +111,7 @@
                     <tr>
                         <td class="fw-bold text-start puntuaciones-goleador">
 
-                            <div class="goleador-inline">
+                            <div class="goleador-inline {% if item.equipo.eliminado %}equipo-eliminado{% endif %}">
 
                                 <img
                                     src="https://flagcdn.com/w20/{{ item.equipo.flag }}.png"
