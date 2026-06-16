@@ -64,14 +64,14 @@
                                                 </span>
                                             </td>
 
-                                            <td class="{% if not item.puntos.J1.activa %}fase-inactiva{% endif %}">{{ item.puntos.J1.valor }}</td>
-                                            <td class="{% if not item.puntos.J2.activa %}fase-inactiva{% endif %}">{{ item.puntos.J2.valor }}</td>
-                                            <td class="{% if not item.puntos.J3.activa %}fase-inactiva{% endif %}">{{ item.puntos.J3.valor }}</td>
-                                            <td class="{% if not item.puntos.DIEC.activa %}fase-inactiva{% endif %}">{{ item.puntos.DIEC.valor }}</td>
-                                            <td class="{% if not item.puntos.OCT.activa %}fase-inactiva{% endif %}">{{ item.puntos.OCT.valor }}</td>
-                                            <td class="{% if not item.puntos.CUA.activa %}fase-inactiva{% endif %}">{{ item.puntos.CUA.valor }}</td>
-                                            <td class="{% if not item.puntos.SEM.activa %}fase-inactiva{% endif %}">{{ item.puntos.SEM.valor }}</td>
-                                            <td class="{% if not item.puntos.FINAL.activa %}fase-inactiva{% endif %}">{{ item.puntos.FINAL.valor }}</td>
+                                            <td class="{% if not item.puntos.J1.activa %}fase-inactiva{% endif %}">{% if item.puntos.J1.activa %}{{ item.puntos.J1.valor }}{% endif %}</td>
+                                            <td class="{% if not item.puntos.J2.activa %}fase-inactiva{% endif %}">{% if item.puntos.J2.activa %}{{ item.puntos.J2.valor }}{% endif %}</td>
+                                            <td class="{% if not item.puntos.J3.activa %}fase-inactiva{% endif %}">{% if item.puntos.J3.activa %}{{ item.puntos.J3.valor }}{% endif %}</td>
+                                            <td class="{% if not item.puntos.DIEC.activa %}fase-inactiva{% endif %}">{% if item.puntos.DIEC.activa %}{{ item.puntos.DIEC.valor }}{% endif %}</td>
+                                            <td class="{% if not item.puntos.OCT.activa %}fase-inactiva{% endif %}">{% if item.puntos.OCT.activa %}{{ item.puntos.OCT.valor }}{% endif %}</td>
+                                            <td class="{% if not item.puntos.CUA.activa %}fase-inactiva{% endif %}">{% if item.puntos.CUA.activa %}{{ item.puntos.CUA.valor }}{% endif %}</td>
+                                            <td class="{% if not item.puntos.SEM.activa %}fase-inactiva{% endif %}">{% if item.puntos.SEM.activa %}{{ item.puntos.SEM.valor }}{% endif %}</td>
+                                            <td class="{% if not item.puntos.FINAL.activa %}fase-inactiva{% endif %}">{% if item.puntos.FINAL.activa %}{{ item.puntos.FINAL.valor }}{% endif %}</td>
                                             <td class="fw-bold text-primary">{{ item.puntos.TOTAL }}</td>
                                         </tr>
                                     {% endfor %}
@@ -127,14 +127,14 @@
                             </div>
                         </td>
 
-                        <td class="{% if not item.puntos.J1.activa %}fase-inactiva{% endif %}">{{ item.puntos.J1.valor }}</td>
-                        <td class="{% if not item.puntos.J2.activa %}fase-inactiva{% endif %}">{{ item.puntos.J2.valor }}</td>
-                        <td class="{% if not item.puntos.J3.activa %}fase-inactiva{% endif %}">{{ item.puntos.J3.valor }}</td>
-                        <td class="{% if not item.puntos.DIEC.activa %}fase-inactiva{% endif %}">{{ item.puntos.DIEC.valor }}</td>
-                        <td class="{% if not item.puntos.OCT.activa %}fase-inactiva{% endif %}">{{ item.puntos.OCT.valor }}</td>
-                        <td class="{% if not item.puntos.CUA.activa %}fase-inactiva{% endif %}">{{ item.puntos.CUA.valor }}</td>
-                        <td class="{% if not item.puntos.SEM.activa %}fase-inactiva{% endif %}">{{ item.puntos.SEM.valor }}</td>
-                        <td class="{% if not item.puntos.FINAL.activa %}fase-inactiva{% endif %}">{{ item.puntos.FINAL.valor }}</td>
+                        <td class="{% if not item.puntos.J1.activa %}fase-inactiva{% endif %}">{% if item.puntos.J1.activa %}{{ item.puntos.J1.valor }}{% endif %}</td>
+                        <td class="{% if not item.puntos.J2.activa %}fase-inactiva{% endif %}">{% if item.puntos.J2.activa %}{{ item.puntos.J2.valor }}{% endif %}</td>
+                        <td class="{% if not item.puntos.J3.activa %}fase-inactiva{% endif %}">{% if item.puntos.J3.activa %}{{ item.puntos.J3.valor }}{% endif %}</td>
+                        <td class="{% if not item.puntos.DIEC.activa %}fase-inactiva{% endif %}">{% if item.puntos.DIEC.activa %}{{ item.puntos.DIEC.valor }}{% endif %}</td>
+                        <td class="{% if not item.puntos.OCT.activa %}fase-inactiva{% endif %}">{% if item.puntos.OCT.activa %}{{ item.puntos.OCT.valor }}{% endif %}</td>
+                        <td class="{% if not item.puntos.CUA.activa %}fase-inactiva{% endif %}">{% if item.puntos.CUA.activa %}{{ item.puntos.CUA.valor }}{% endif %}</td>
+                        <td class="{% if not item.puntos.SEM.activa %}fase-inactiva{% endif %}">{% if item.puntos.SEM.activa %}{{ item.puntos.SEM.valor }}{% endif %}</td>
+                        <td class="{% if not item.puntos.FINAL.activa %}fase-inactiva{% endif %}">{% if item.puntos.FINAL.activa %}{{ item.puntos.FINAL.valor }}{% endif %}</td>
                         <td class="fw-bold text-primary">{{ item.puntos.TOTAL }}</td>
                     </tr>
                 {% empty %}
