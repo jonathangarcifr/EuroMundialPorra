@@ -4,19 +4,25 @@
 
 {% block contenido %}
 
-<div class="d-flex justify-content-end gap-2 mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3">
 
-    {% if request.user.is_staff %}
-    <a href="{% url 'exportar_clasificacion_pdf' %}" class="btn btn-primary btn-sm">
-        <i class="bi bi-file-earmark-pdf"></i>
-        Exportar PDF
-    </a>
-    {% endif %}
+    <div class="text-danger small fw-bold">
+        En rojo: selecciones pendientes de jugar
+    </div>
 
-    <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i>
-        Volver
-    </a>
+    <div class="d-flex gap-2">
+        {% if request.user.is_staff %}
+        <a href="{% url 'exportar_clasificacion_pdf' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-file-earmark-pdf"></i>
+            Exportar PDF
+        </a>
+        {% endif %}
+
+        <a href="{% url 'inicio' %}" class="btn btn-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+            Volver
+        </a>
+    </div>
 
 </div>
 
@@ -54,7 +60,7 @@
 
                             {% for equipo in fila.equipos %}
                                 <td>
-                                    <span class="equipo-mini {% if equipo.info.eliminado %}equipo-eliminado{% endif %}" 
+                                    <span class="equipo-mini {% if equipo.info.eliminado %}equipo-eliminado{% elif equipo.info.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}" 
                                     title="{{ equipo.nombre }} - {{ equipo.puntos }} puntos">
                                         <img src="https://flagcdn.com/w20/{{ equipo.info.flag }}.png" alt="{{ equipo.nombre }}">
                                         {{ equipo.info.codigo }}
@@ -115,7 +121,7 @@
 
                 <div class="apuesta-mobile-equipos">
                     {% for equipo in fila.equipos %}
-                        <div class="apuesta-mobile-equipo {% if equipo.info.eliminado %}equipo-eliminado{% endif %}">
+                        <div class="apuesta-mobile-equipo {% if equipo.info.eliminado %}equipo-eliminado{% elif equipo.info.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}">
                             <img src="https://flagcdn.com/w20/{{ equipo.info.flag }}.png">
                             {{ equipo.info.codigo }}
                         </div>
@@ -203,7 +209,7 @@
                                 {% for equipo in item.equipos %}
                                     <td>
                                         <span
-                                            class="equipo-mini {% if equipo.eliminado %}equipo-eliminado{% endif %}"
+                                            class="equipo-mini {% if equipo.eliminado %}equipo-eliminado{% elif equipo.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}"
                                             title="{{ equipo.nombre }} - {{ equipo.puntos }} puntos">
                                             <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
                                             {{ equipo.codigo }}
@@ -285,7 +291,7 @@
 
                 <div class="apuesta-mobile-equipos">
                     {% for equipo in item.equipos %}
-                        <div class="apuesta-mobile-equipo {% if equipo.eliminado %}equipo-eliminado{% endif %}">
+                        <div class="apuesta-mobile-equipo {% if equipo.eliminado %}equipo-eliminado{% elif equipo.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}">
                             <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
                             {{ equipo.codigo }}
                         </div>

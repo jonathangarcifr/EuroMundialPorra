@@ -308,6 +308,19 @@ def resultados(request):
 
 def clasificacion(request):
     equipos_eliminados = obtener_equipos_eliminados()
+    fase_actual = obtener_fase_actual_partidos()
+
+    equipos_que_ya_jugaron_fase_actual = set()
+
+    if fase_actual:
+        partidos_jugados_fase_actual = Partido.objects.filter(
+            fase=fase_actual,
+            jugado=True,
+        )
+
+        for partido in partidos_jugados_fase_actual:
+            equipos_que_ya_jugaron_fase_actual.add(partido.equipo_local)
+            equipos_que_ya_jugaron_fase_actual.add(partido.equipo_visitante)
 
     apuestas = sorted(
         Apuesta.objects.all(),
@@ -341,6 +354,12 @@ def clasificacion(request):
                 nombre_equipo,
                 {"TOTAL": 0}
             ).get("TOTAL", 0)
+
+            info["pendiente_fase_actual"] = (
+                fase_actual
+                and nombre_equipo not in equipos_que_ya_jugaron_fase_actual
+                and nombre_equipo not in equipos_eliminados
+            )
 
             equipos.append(info)
 
@@ -382,7 +401,6 @@ def clasificacion(request):
             "resumen_ideal_cuchara": resumen_ideal_cuchara,
         },
     )
-
 
 def asignar_posiciones(clasificacion_data):
     posicion = 0
@@ -891,6 +909,20 @@ def obtener_resumen_ideal_cuchara():
     bombos = [BOMBO_1, BOMBO_2, BOMBO_3, BOMBO_4, BOMBO_5, BOMBO_6]
 
     equipos_eliminados = obtener_equipos_eliminados()
+    fase_actual = obtener_fase_actual_partidos()
+
+    equipos_que_ya_jugaron_fase_actual = set()
+
+    if fase_actual:
+        partidos_jugados_fase_actual = Partido.objects.filter(
+            fase=fase_actual,
+            jugado=True,
+        )
+
+        for partido in partidos_jugados_fase_actual:
+            equipos_que_ya_jugaron_fase_actual.add(partido.equipo_local)
+            equipos_que_ya_jugaron_fase_actual.add(partido.equipo_visitante)
+
     puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
 
     goleadores_elegidos = (
@@ -929,12 +961,20 @@ def obtener_resumen_ideal_cuchara():
                 puntos_equipos_globales,
             )["TOTAL"]
 
+            info = obtener_info_equipo(
+                nombre_equipo,
+                equipos_eliminados,
+            )
+
+            info["pendiente_fase_actual"] = (
+                fase_actual
+                and nombre_equipo not in equipos_que_ya_jugaron_fase_actual
+                and nombre_equipo not in equipos_eliminados
+            )
+
             equipos_bombo.append({
                 "nombre": nombre_equipo,
-                "info": obtener_info_equipo(
-                    nombre_equipo,
-                    equipos_eliminados,
-                ),
+                "info": info,
                 "puntos": puntos,
             })
 
@@ -1055,3 +1095,12 @@ def obtener_equipos_eliminados():
         equipos_vivos = equipos_fase
 
     return equipos_eliminados
+
+def obtener_fase_actual_partidos():
+    for codigo_fase, _ in Partido.FASES:
+        partidos_fase = Partido.objects.filter(fase=codigo_fase)
+
+        if partidos_fase.exists() and partidos_fase.filter(jugado=False).exists():
+            return codigo_fase
+
+    return None
