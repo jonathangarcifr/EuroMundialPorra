@@ -334,17 +334,26 @@ def clasificacion(request):
 
         for i in range(1, 13):
             nombre_equipo = getattr(apuesta, f"equipo_{i}")
-            equipos.append(
-                obtener_info_equipo(nombre_equipo, equipos_eliminados)
-            )
+
+            info = obtener_info_equipo(nombre_equipo, equipos_eliminados)
+
+            info["puntos"] = puntos_equipos_globales.get(
+                nombre_equipo,
+                {"TOTAL": 0}
+            ).get("TOTAL", 0)
+
+            equipos.append(info)
 
         clasificacion_data.append({
             "apuesta": apuesta,
             "equipos": equipos,
-            "equipo_goleador_info": obtener_info_equipo(
-                apuesta.equipo_goleador,
-                equipos_eliminados,
-            ),
+            "equipo_goleador_info": {
+                **obtener_info_equipo(
+                    apuesta.equipo_goleador,
+                    equipos_eliminados,
+                ),
+                "puntos": puntos_goleador,
+            },
             "puntos_equipos": puntos_equipos,
             "puntos_goleador": puntos_goleador,
             "puntos_totales": puntos_totales,

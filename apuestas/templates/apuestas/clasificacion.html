@@ -65,7 +65,8 @@
                             <td class="fw-bold">
                                 {% if fila.goleador %}
 
-                                    <span class="equipo-mini {% if fila.goleador.equipo_info.eliminado %}equipo-eliminado{% endif %}">
+                                    <span class="equipo-mini {% if fila.goleador.equipo_info.eliminado %}equipo-eliminado{% endif %}"
+                                    title="{{ fila.goleador.jugador }} - {{ fila.goleador.puntos }} puntos">
                                         <img
                                             src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png"
                                             alt="{{ fila.goleador.equipo }}"
@@ -203,8 +204,7 @@
                                     <td>
                                         <span
                                             class="equipo-mini {% if equipo.eliminado %}equipo-eliminado{% endif %}"
-                                            title="{{ equipo.nombre }}"
-                                        >
+                                            title="{{ equipo.nombre }} - {{ equipo.puntos }} puntos">
                                             <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png" alt="{{ equipo.nombre }}">
                                             {{ equipo.codigo }}
                                         </span>
@@ -213,7 +213,8 @@
 
                                 <td class="fw-semibold">
                                     <span>
-                                        <span class="equipo-mini {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% endif %}">
+                                        <span class="equipo-mini {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% endif %}"
+                                        title="{{ item.apuesta.goleador }} - {{ item.equipo_goleador_info.puntos }} puntos">
                                             <img
                                                 src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
                                                 alt="{{ item.equipo_goleador_info.nombre }}"
