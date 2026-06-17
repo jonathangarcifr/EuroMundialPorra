@@ -63,6 +63,7 @@ def nueva_apuesta(request):
     return render(request, "apuestas/formulario_apuesta.html", {"form": form})
 
 
+@staff_member_required
 def ver_apuestas(request):
     equipos_eliminados = obtener_equipos_eliminados()
 
@@ -83,6 +84,7 @@ def ver_apuestas(request):
             obtener_info_equipo(getattr(apuesta, f"equipo_{i}"), equipos_eliminados)
             for i in range(1, 13)
         ]
+
 
         apuestas_preparadas.append({
             "apuesta": apuesta,
@@ -363,14 +365,44 @@ def clasificacion(request):
 
             equipos.append(info)
 
+        equipos_pendientes = sum(
+            1
+            for equipo in equipos
+            if equipo.get("pendiente_fase_actual")
+        )
+
+        equipos_jugados = 12 - equipos_pendientes
+
+        goleador_ha_jugado = (
+            fase_actual
+            and apuesta.equipo_goleador in equipos_que_ya_jugaron_fase_actual
+        )
+        
+        equipo_goleador_info = obtener_info_equipo(
+            apuesta.equipo_goleador,
+            equipos_eliminados,
+        )
+
+        equipo_goleador_info["pendiente_fase_actual"] = (
+            fase_actual
+            and apuesta.equipo_goleador not in equipos_que_ya_jugaron_fase_actual
+            and apuesta.equipo_goleador not in equipos_eliminados
+        )
+
+        pendientes_detalle = []
+
+        for equipo in equipos:
+            if equipo.get("pendiente_fase_actual"):
+                pendientes_detalle.append(equipo["codigo"])
+
+        if equipo_goleador_info["pendiente_fase_actual"]:
+            pendientes_detalle.append(apuesta.goleador)
+
         clasificacion_data.append({
             "apuesta": apuesta,
             "equipos": equipos,
             "equipo_goleador_info": {
-                **obtener_info_equipo(
-                    apuesta.equipo_goleador,
-                    equipos_eliminados,
-                ),
+                **equipo_goleador_info,
                 "puntos": puntos_goleador,
             },
             "puntos_equipos": puntos_equipos,
@@ -380,6 +412,10 @@ def clasificacion(request):
                 f"{puntos_equipos + puntos_goleador}"
                 f".{puntos_goleador:02d}"
             ),
+            "equipos_pendientes": equipos_pendientes,
+            "equipos_jugados": equipos_jugados,
+            "goleador_ha_jugado": goleador_ha_jugado,
+            "pendientes_detalle": pendientes_detalle,
         })
 
     clasificacion_data.sort(
@@ -399,6 +435,7 @@ def clasificacion(request):
         {
             "clasificacion": clasificacion_data,
             "resumen_ideal_cuchara": resumen_ideal_cuchara,
+            "fase_actual": fase_actual,
         },
     )
 
@@ -940,13 +977,21 @@ def obtener_resumen_ideal_cuchara():
             puntos_goleadores_globales,
         )["TOTAL"]
 
+        equipo_info = obtener_info_equipo(
+            item["equipo_goleador"],
+            equipos_eliminados,
+        )
+
+        equipo_info["pendiente_fase_actual"] = (
+            fase_actual
+            and item["equipo_goleador"] not in equipos_que_ya_jugaron_fase_actual
+            and item["equipo_goleador"] not in equipos_eliminados
+        )
+
         goleadores.append({
             "jugador": item["goleador"],
             "equipo": item["equipo_goleador"],
-            "equipo_info": obtener_info_equipo(
-                item["equipo_goleador"],
-                equipos_eliminados,
-            ),
+            "equipo_info": equipo_info,
             "puntos": puntos_goleador,
         })
 

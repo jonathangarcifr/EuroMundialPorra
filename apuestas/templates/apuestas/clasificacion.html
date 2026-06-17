@@ -4,11 +4,7 @@
 
 {% block contenido %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-
-    <div class="text-danger small fw-bold">
-        En rojo: selecciones pendientes de jugar
-    </div>
+<div class="d-flex justify-content-end gap-2 mb-3">
 
     <div class="d-flex gap-2">
         {% if request.user.is_staff %}
@@ -71,7 +67,12 @@
                             <td class="fw-bold">
                                 {% if fila.goleador %}
 
-                                    <span class="equipo-mini {% if fila.goleador.equipo_info.eliminado %}equipo-eliminado{% endif %}"
+                                    <span class="equipo-mini 
+                                    {% if fila.goleador.equipo_info.eliminado %}
+                                        equipo-eliminado
+                                    {% elif fila.goleador.equipo_info.pendiente_fase_actual %}
+                                        equipo-pendiente-fase
+                                    {% endif %}"
                                     title="{{ fila.goleador.jugador }} - {{ fila.goleador.puntos }} puntos">
                                         <img
                                             src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png"
@@ -108,7 +109,12 @@
 
                 <hr class="my-2">
 
-                <div class="apuesta-mobile-goleador {% if fila.goleador.equipo_info.eliminado %}equipo-eliminado{% endif %}">
+                <div class="apuesta-mobile-goleador 
+                {% if fila.goleador.equipo_info.eliminado %}
+                    equipo-eliminado
+                {% elif fila.goleador.equipo_info.pendiente_fase_actual %}
+                    equipo-pendiente-fase
+                {% endif %}">
                     {% if fila.goleador %}
                         <img src="https://flagcdn.com/w20/{{ fila.goleador.equipo_info.flag }}.png">
                         {{ fila.goleador.jugador }}
@@ -219,7 +225,12 @@
 
                                 <td class="fw-semibold">
                                     <span>
-                                        <span class="equipo-mini {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% endif %}"
+                                        <span class="equipo-mini 
+                                        {% if item.equipo_goleador_info.eliminado %}
+                                            equipo-eliminado
+                                        {% elif item.equipo_goleador_info.pendiente_fase_actual %}
+                                            equipo-pendiente-fase
+                                        {% endif %}"
                                         title="{{ item.apuesta.goleador }} - {{ item.equipo_goleador_info.puntos }} puntos">
                                             <img
                                                 src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
@@ -249,14 +260,86 @@
     </div>
 </div>
 
-<div class="clasificacion-mobile">
-    {% for item in clasificacion %}
-        <div class="card shadow-sm mb-3 clasificacion-mobile-card" data-nombre="{{ item.apuesta.nombre|lower }}">
-            <div class="card-body">
+<div class="clasificacion-mobile-list">
 
-                <div class="text-center">
+    <div class="table-responsive">
+        <table class="table table-bordered table-sm align-middle apuestas-table mb-0">
+            <thead class="table-primary">
+                <tr>
+                    <th>#</th>
+                    <th>Participante</th>
+                    <th>Puntos</th>
+                    <th>Equipos</th>
+                    <th>Goleador</th>
+                    <th></th>
+                </tr>
+            </thead>
 
-                    <div class="apuesta-mobile-nombre">
+            <tbody>
+                {% for item in clasificacion %}
+                    <tr class="clasificacion-mobile-row" data-nombre="{{ item.apuesta.nombre|lower }}">
+                        <td class="fw-bold text-center">
+                            {% if item.posicion == 1 %}
+                                🥇
+                            {% elif item.posicion == 2 %}
+                                🥈
+                            {% elif item.posicion == 3 %}
+                                🥉
+                            {% else %}
+                                <span class="badge bg-secondary badge-posicion">
+                                    {{ item.posicion }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="fw-bold">
+                            {{ item.apuesta.nombre }}
+                        </td>
+
+                        <td class="fw-bold text-primary text-center">
+                            {{ item.puntos_display }}
+                        </td>
+
+                        <td class="text-center fw-bold">
+                            <span class="{% if item.equipos_jugados == 12 %}text-success{% else %}text-warning{% endif %}">
+                                {{ item.equipos_jugados }}/12
+                            </span>
+                        </td>
+
+                        <td class="text-center">
+                            {% if item.goleador_ha_jugado %}
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                                <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <button
+                                type="button"
+                                class="btn-info-mobile-clean"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalClasificacion{{ forloop.counter }}"
+                            >
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% for item in clasificacion %}
+<div class="modal fade" id="modalClasificacion{{ forloop.counter }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <div class="modal-title w-100 modal-clasificacion-header">
+                    <div class="modal-clasificacion-pos">
                         {% if item.posicion == 1 %}
                             🥇
                         {% elif item.posicion == 2 %}
@@ -264,39 +347,51 @@
                         {% elif item.posicion == 3 %}
                             🥉
                         {% else %}
-                            <span class="badge bg-secondary badge-posicion me-1">
-                                {{ item.posicion }}
-                            </span>
+                            #{{ item.posicion }}
                         {% endif %}
-                        {{ item.apuesta.nombre }}
                     </div>
 
+                    <div class="modal-clasificacion-nombre">
+                        {{ item.apuesta.nombre }}
+                    </div>
                 </div>
 
-                <hr class="my-2">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
 
-                <div class="apuesta-mobile-goleador {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% endif %}">
+            <div class="modal-body">
 
-                    {% if item.equipo_goleador_info %}
-                        <img
-                            src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png"
-                        >
-                    {% endif %}
-
-                    {{ item.apuesta.goleador }}
-
-                </div>
-
-                <hr class="my-2">
-
-                <div class="apuesta-mobile-equipos">
+                <div class="modal-equipos-grid">
                     {% for equipo in item.equipos %}
-                        <div class="apuesta-mobile-equipo {% if equipo.eliminado %}equipo-eliminado{% elif equipo.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}">
+                        <div class="modal-equipo {% if equipo.eliminado %}equipo-eliminado{% elif equipo.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}">
                             <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
                             {{ equipo.codigo }}
                         </div>
                     {% endfor %}
                 </div>
+
+                <hr class="my-2">
+
+                <div class="modal-goleador text-center {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% elif item.equipo_goleador_info.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}">
+                    <img src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png">
+                    {{ item.apuesta.goleador }}
+                </div>
+
+                <hr class="my-2">
+
+                {% if item.pendientes_detalle %}
+                    <div class="small fw-bold text-center mb-2">
+                        Aún por jugar en esta fase:
+                    </div>
+
+                    <div class="text-center">
+                        {% for pendiente in item.pendientes_detalle %}
+                            <span class="badge badge-pendiente-fase">
+                                {{ pendiente }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
                 <hr class="my-2">
 
@@ -307,9 +402,11 @@
                 </div>
 
             </div>
+
         </div>
-    {% endfor %}
+    </div>
 </div>
+{% endfor %}
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -320,7 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
     buscador.addEventListener("input", function () {
         const texto = buscador.value.toLowerCase();
 
-        document.querySelectorAll(".clasificacion-mobile-card").forEach(function (card) {
+        document.querySelectorAll(".clasificacion-mobile-row").forEach(function (card) {
             const nombre = card.dataset.nombre || "";
             card.style.display = nombre.includes(texto) ? "" : "none";
         });
