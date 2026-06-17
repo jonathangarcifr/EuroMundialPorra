@@ -347,7 +347,9 @@
                         {% elif item.posicion == 3 %}
                             🥉
                         {% else %}
-                            #{{ item.posicion }}
+                            <span class="badge bg-secondary badge-posicion">
+                                {{ item.posicion }}
+                            </span>
                         {% endif %}
                     </div>
 
@@ -390,6 +392,10 @@
                                 {{ pendiente }}
                             </span>
                         {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="small fw-bold text-center mb-2">
+                        Todas los equipos y el goleador ya han jugado en esta fase.
                     </div>
                 {% endif %}
 
