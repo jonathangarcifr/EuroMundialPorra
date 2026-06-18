@@ -420,19 +420,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!buscador) return;
 
-    buscador.addEventListener("input", function () {
-        const texto = buscador.value.toLowerCase();
+    function normalizar(texto) {
+        return texto
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+    }
 
-        document.querySelectorAll(".clasificacion-mobile-row").forEach(function (card) {
-            const nombre = card.dataset.nombre || "";
-            card.style.display = nombre.includes(texto) ? "" : "none";
+    buscador.addEventListener("input", function () {
+        const texto = normalizar(buscador.value);
+
+        document.querySelectorAll(".clasificacion-mobile-row").forEach(function (row) {
+            const nombre = normalizar(row.dataset.nombre || "");
+            row.style.display = nombre.includes(texto) ? "" : "none";
         });
 
         document.querySelectorAll(".clasificacion-table-card tbody tr").forEach(function (row) {
             const nombre = row.querySelector("td:nth-child(2)");
             if (!nombre) return;
 
-            row.style.display = nombre.textContent.toLowerCase().includes(texto) ? "" : "none";
+            row.style.display = normalizar(nombre.textContent).includes(texto) ? "" : "none";
         });
     });
 });
