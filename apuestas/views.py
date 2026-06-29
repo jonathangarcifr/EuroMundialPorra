@@ -371,11 +371,22 @@ def clasificacion(request):
             if equipo.get("pendiente_fase_actual")
         )
 
+        equipos_eliminados_count = sum(
+            1
+            for equipo in equipos
+            if equipo.get("eliminado")
+        )
+
+        equipos_activos = 12 - equipos_eliminados_count
+
         equipos_jugados = 12 - equipos_pendientes
+
+        goleador_eliminado = apuesta.equipo_goleador in equipos_eliminados
 
         goleador_ha_jugado = (
             fase_actual
             and apuesta.equipo_goleador in equipos_que_ya_jugaron_fase_actual
+            and not goleador_eliminado
         )
         
         equipo_goleador_info = obtener_info_equipo(
@@ -416,6 +427,9 @@ def clasificacion(request):
             "equipos_jugados": equipos_jugados,
             "goleador_ha_jugado": goleador_ha_jugado,
             "pendientes_detalle": pendientes_detalle,
+            "equipos_activos": equipos_activos,
+            "equipos_eliminados_count": equipos_eliminados_count,
+            "goleador_eliminado": goleador_eliminado,
         })
 
     clasificacion_data.sort(

@@ -163,6 +163,22 @@
         </div>
     </div>
 
+    <div class="leyenda-clasificacion-mobile">
+        <div>
+            <strong>SELECCIONES</strong><br>
+            <span><strong>SA</strong> = Activas</span><br>
+            <span><strong>SE</strong> = Eliminadas</span><br>
+            <span><strong>PJ</strong> = Por jugar</span>
+        </div>
+
+        <div>
+            <strong>GOLEADOR</strong><br>
+            <span><i class="bi bi-check-circle-fill text-success"></i> Ya jugó</span><br>
+            <span><i class="bi bi-clock-fill text-warning"></i> Por jugar</span><br>
+            <span><i class="bi bi-x-circle-fill text-danger"></i> Eliminado</span>
+        </div>
+    </div>
+
 
 <div class="card shadow-sm clasificacion-table-card">
     <div class="card shadow-sm">
@@ -269,8 +285,10 @@
                     <th>#</th>
                     <th>Participante</th>
                     <th>Puntos</th>
-                    <th>Equipos</th>
-                    <th>Goleador</th>
+                    <th>SA</th>
+                    <th>SE</th>
+                    <th>PJ</th>
+                    <th>G</th>
                     <th></th>
                 </tr>
             </thead>
@@ -300,17 +318,25 @@
                             {{ item.puntos_display }}
                         </td>
 
-                        <td class="text-center fw-bold">
-                            <span class="{% if item.equipos_jugados == 12 %}text-success{% else %}text-warning{% endif %}">
-                                {{ item.equipos_jugados }}/12
-                            </span>
+                        <td class="text-center fw-bold text-success">
+                            {{ item.equipos_activos }}
+                        </td>
+
+                        <td class="text-center fw-bold text-danger">
+                            {{ item.equipos_eliminados_count }}
+                        </td>
+
+                        <td class="text-center fw-bold {% if item.equipos_pendientes > 0 %}text-warning{% else %}text-success{% endif %}">
+                            {{ item.equipos_pendientes }}
                         </td>
 
                         <td class="text-center">
-                            {% if item.goleador_ha_jugado %}
+                            {% if item.goleador_eliminado %}
+                                <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% elif item.goleador_ha_jugado %}
                                 <i class="bi bi-check-circle-fill text-success"></i>
                             {% else %}
-                                <i class="bi bi-x-circle-fill text-danger"></i>
+                                <i class="bi bi-clock-fill text-warning"></i>
                             {% endif %}
                         </td>
 
