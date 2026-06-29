@@ -1136,6 +1136,7 @@ def obtener_equipos_eliminados():
     equipos_vivos = set(nombre for nombre, _ in TODOS_EQUIPOS)
     equipos_eliminados = set()
 
+    # Regla 1: cuando se complete una fase de cruces, los que no aparezcan quedan eliminados
     for fase in FASES_ELIMINACION:
         partidos_fase = Partido.objects.filter(fase=fase)
 
@@ -1152,6 +1153,18 @@ def obtener_equipos_eliminados():
         equipos_eliminados.update(eliminados_en_fase)
 
         equipos_vivos = equipos_fase
+
+    # Regla 2: en cruces, quien pierde un partido jugado queda eliminado automáticamente
+    partidos_eliminatorias_jugados = Partido.objects.filter(
+        fase__in=FASES_ELIMINACION,
+        jugado=True,
+    )
+
+    for partido in partidos_eliminatorias_jugados:
+        if partido.goles_local > partido.goles_visitante:
+            equipos_eliminados.add(partido.equipo_visitante)
+        elif partido.goles_visitante > partido.goles_local:
+            equipos_eliminados.add(partido.equipo_local)
 
     return equipos_eliminados
 
