@@ -30,6 +30,7 @@
                 <thead class="table-primary">
                     <tr>
                         <th>Tipo</th>
+                        <th>Puntos</th>
                         <th>Eq. 1</th>
                         <th>Eq. 2</th>
                         <th>Eq. 3</th>
@@ -43,7 +44,6 @@
                         <th>Eq. 11</th>
                         <th>Eq. 12</th>
                         <th>Goleador</th>
-                        <th>Puntos</th>
                     </tr>
                 </thead>
 
@@ -52,6 +52,10 @@
                         <tr>
                             <td class="fw-bold text-primary">
                                 {{ fila.tipo }}
+                            </td>
+
+                            <td class="fw-bold text-primary">
+                                {{ fila.puntos_display }}
                             </td>
 
                             {% for equipo in fila.equipos %}
@@ -85,10 +89,7 @@
                                     -
                                 {% endif %}
                             </td>
-
-                            <td class="fw-bold text-primary">
-                                {{ fila.puntos_display }}
-                            </td>
+                            
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -190,6 +191,7 @@
                         <tr>
                             <th>Pos</th>
                             <th>Nombre</th>
+                            <th>Puntos</th>
                             <th>Eq. 1</th>
                             <th>Eq. 2</th>
                             <th>Eq. 3</th>
@@ -203,7 +205,6 @@
                             <th>Eq. 11</th>
                             <th>Eq. 12</th>
                             <th>Goleador</th>
-                            <th>Puntos</th>
                         </tr>
                     </thead>
 
@@ -226,6 +227,10 @@
 
                                 <td class="fw-bold text-start">
                                     {{ item.apuesta.nombre }}
+                                </td>
+
+                                <td class="fw-bold text-primary">
+                                    {{ item.puntos_display }}
                                 </td>
 
                                 {% for equipo in item.equipos %}
@@ -255,10 +260,6 @@
                                             {{ item.apuesta.goleador }}
                                         </span>
                                     </span>
-                                </td>
-
-                                <td class="fw-bold text-primary">
-                                    {{ item.puntos_display }}
                                 </td>
                             </tr>
                         {% empty %}
