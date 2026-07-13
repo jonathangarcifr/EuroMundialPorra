@@ -4,7 +4,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 from django.db.models import Prefetch
 
-from .models import Partido, Apuesta, GoleadorPartido
+from .models import Partido, Apuesta, GoleadorPartido, GoleadorTorneo
 from .forms import ApuestaForm, PartidoForm
 from .choices import (
     TODOS_EQUIPOS,
@@ -982,7 +982,7 @@ def obtener_resumen_ideal_cuchara():
         .distinct()
     )
 
-    goleadores = []
+    goleadores_apostados = []
 
     for item in goleadores_elegidos:
         puntos_goleador = calcular_puntos_goleador_por_fase(
@@ -1002,12 +1002,38 @@ def obtener_resumen_ideal_cuchara():
             and item["equipo_goleador"] not in equipos_eliminados
         )
 
-        goleadores.append({
+        goleadores_apostados.append({
             "jugador": item["goleador"],
             "equipo": item["equipo_goleador"],
             "equipo_info": equipo_info,
             "puntos": puntos_goleador,
+            "manual": False,
         })
+
+    goleadores_manuales = []
+
+    for item in GoleadorTorneo.objects.filter(activo=True):
+        equipo_info = obtener_info_equipo(
+            item.equipo,
+            equipos_eliminados,
+        )
+
+        equipo_info["pendiente_fase_actual"] = (
+            fase_actual
+            and item.equipo not in equipos_que_ya_jugaron_fase_actual
+            and item.equipo not in equipos_eliminados
+        )
+
+        goleadores_manuales.append({
+            "jugador": item.jugador,
+            "equipo": item.equipo,
+            "equipo_info": equipo_info,
+            "puntos": item.puntos,
+            "manual": True,
+        })
+
+    goleadores_ideal = goleadores_apostados + goleadores_manuales
+    goleadores_cuchara = goleadores_apostados
 
     equipos_por_bombo = []
 
@@ -1042,7 +1068,12 @@ def obtener_resumen_ideal_cuchara():
     def construir_fila(tipo):
         mejor = None
 
-        for goleador in goleadores:
+        if tipo == "APUESTA IDEAL":
+            goleadores_base = goleadores_ideal
+        else:
+            goleadores_base = goleadores_cuchara
+
+        for goleador in goleadores_base:
             equipos_finales = []
             puntos_equipos = 0
 

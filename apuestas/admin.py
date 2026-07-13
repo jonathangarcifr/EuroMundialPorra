@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Apuesta
 from .models import Partido, GoleadorPartido
+from .models import GoleadorTorneo
 
 
 @admin.register(Apuesta)
@@ -32,3 +33,9 @@ class GoleadorPartidoAdmin(admin.ModelAdmin):
         "equipo",
         "goles",
     )
+
+@admin.register(GoleadorTorneo)
+class GoleadorTorneoAdmin(admin.ModelAdmin):
+    list_display = ("jugador", "equipo", "puntos", "activo")
+    list_filter = ("activo", "equipo")
+    search_fields = ("jugador", "equipo")

@@ -83,3 +83,15 @@ class GoleadorTorneo(models.Model):
 
     def __str__(self):
         return f"{self.jugador} - {self.equipo}"
+    
+class GoleadorTorneo(models.Model):
+    jugador = models.CharField(max_length=100)
+    equipo = models.CharField(max_length=100)
+    puntos = models.PositiveIntegerField(default=0)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ("jugador", "equipo")
+
+    def __str__(self):
+        return f"{self.jugador} - {self.equipo} ({self.puntos})"
