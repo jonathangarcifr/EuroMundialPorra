@@ -72,17 +72,6 @@ class GoleadorPartido(models.Model):
     def __str__(self):
         return f"{self.jugador} ({self.equipo})"
 
-
-class GoleadorTorneo(models.Model):
-    jugador = models.CharField(max_length=100)
-    equipo = models.CharField(max_length=100)
-    goles = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        unique_together = ("jugador", "equipo")
-
-    def __str__(self):
-        return f"{self.jugador} - {self.equipo}"
     
 class GoleadorTorneo(models.Model):
     jugador = models.CharField(max_length=100)
