@@ -11,12 +11,11 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="icon" type="image/png" href="{% static 'apuestas/img/favicon.png' %}">
-    <link rel="shortcut icon" href="{% static 'apuestas/img/favicon.png' %}">
-    <link rel="apple-touch-icon" href="{% static 'apuestas/img/favicon.png' %}">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'apuestas/img/favicon.png' %}" >
+    <link rel="shortcut icon" href="{% static 'apuestas/img/favicon.png' %}" >
+    <link rel="apple-touch-icon" href="{% static 'apuestas/img/favicon.png' %}" >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" >
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" >
 
     <style>
         :root {
@@ -930,114 +929,1139 @@
                 padding: 0;
             }
         }
+
+        .cuentaatras-page {
+            width: 100%;
+            padding-bottom: 3rem;
+        }
+
+        .premiados-section {
+            padding: 2.2rem 1rem 3rem;
+            background:
+                radial-gradient(
+                    circle at top,
+                    rgba(255, 193, 7, 0.15),
+                    transparent 38%
+                ),
+                linear-gradient(
+                    180deg,
+                    #f8fafc 0%,
+                    #eef3f9 100%
+                );
+            border-radius: 24px;
+        }
+
+        .premiados-title {
+            max-width: 760px;
+            margin: 0 auto 2.5rem;
+            text-align: center;
+        }
+
+        .premiados-kicker {
+            display: inline-block;
+            margin-bottom: 0.55rem;
+            color: #d18b00;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+        }
+
+        .premiados-title h1 {
+            margin: 0;
+            color: #12233f;
+            font-size: clamp(2rem, 5vw, 3.35rem);
+            font-weight: 900;
+            letter-spacing: -0.04em;
+        }
+
+        .premiados-title p {
+            max-width: 610px;
+            margin: 0.85rem auto 0;
+            color: #68758a;
+            font-size: 1rem;
+        }
+
+        .podium-wrapper {
+            display: grid;
+            grid-template-columns:
+                minmax(0, 1fr)
+                minmax(0, 1.18fr)
+                minmax(0, 1fr);
+            align-items: end;
+            gap: 1rem;
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        .podium-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 260px;
+            padding: 1.7rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 24px 24px 10px 10px;
+            text-align: center;
+            box-shadow:
+                0 18px 45px rgba(26, 45, 77, 0.15);
+        }
+
+        .podium-card::after {
+            content: "";
+            position: absolute;
+            right: -35px;
+            bottom: -50px;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .podium-first {
+            min-height: 330px;
+            padding-top: 2.3rem;
+            color: #5b3900;
+            background:
+                linear-gradient(
+                    145deg,
+                    #fff8c7,
+                    #f4bb35 70%,
+                    #dd9708
+                );
+        }
+
+        .podium-second {
+            color: #354052;
+            background:
+                linear-gradient(
+                    145deg,
+                    #f8fafc,
+                    #cbd5e1 70%,
+                    #a8b4c5
+                );
+        }
+
+        .podium-third {
+            color: #552f1d;
+            background:
+                linear-gradient(
+                    145deg,
+                    #ffe2cf,
+                    #d68a5e 70%,
+                    #af633d
+                );
+        }
+
+        .champion-crown {
+            position: absolute;
+            top: 0.6rem;
+            left: 50%;
+            color: #fff8c7;
+            font-size: 1.8rem;
+            transform: translateX(-50%);
+            filter: drop-shadow(
+                0 2px 3px rgba(79, 48, 0, 0.3)
+            );
+        }
+
+        .podium-medal {
+            margin-bottom: 0.45rem;
+            font-size: 3.2rem;
+            line-height: 1;
+        }
+
+        .podium-position {
+            margin-bottom: 0.7rem;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+        }
+
+        .podium-card h2 {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            font-size: clamp(1.15rem, 2.5vw, 1.65rem);
+            font-weight: 900;
+            word-break: break-word;
+        }
+
+        .podium-points {
+            position: relative;
+            z-index: 1;
+            margin-top: 1rem;
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .podium-points span {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.72;
+        }
+
+        .wooden-spoon-card {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 1rem;
+            max-width: 760px;
+            margin: 1.5rem auto 0;
+            padding: 1.15rem 1.35rem;
+            color: #fff;
+            background:
+                linear-gradient(
+                    135deg,
+                    #71472d,
+                    #a96d42
+                );
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 18px;
+            box-shadow:
+                0 14px 32px rgba(85, 47, 29, 0.22);
+        }
+
+        .wooden-spoon-icon {
+            font-size: 2.8rem;
+        }
+
+        .wooden-spoon-label {
+            display: block;
+            margin-bottom: 0.15rem;
+            color: #f7d8bd;
+            font-size: 0.66rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+        }
+
+        .wooden-spoon-info h2 {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 900;
+        }
+
+        .wooden-spoon-info p {
+            margin: 0.2rem 0 0;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.85rem;
+        }
+
+        .wooden-spoon-position {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 62px;
+            height: 62px;
+            padding: 0.4rem;
+            color: #71472d;
+            background: #f7e2ce;
+            border-radius: 50%;
+            font-size: 1.15rem;
+            font-weight: 900;
+        }
+
+        .final-ranking-action {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .btn-final-ranking {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem;
+            padding: 0.9rem 1.35rem;
+            color: #fff;
+            background:
+                linear-gradient(
+                    135deg,
+                    #1958c7,
+                    #123f91
+                );
+            border-radius: 999px;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow:
+                0 12px 28px rgba(18, 63, 145, 0.25);
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .btn-final-ranking:hover {
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow:
+                0 16px 34px rgba(18, 63, 145, 0.32);
+        }
+
+        .next-tournament-section {
+            position: relative;
+            overflow: hidden;
+            margin-top: 2rem;
+            padding: 4rem 1rem;
+            color: #fff;
+            background:
+                linear-gradient(
+                    145deg,
+                    #070d2d 0%,
+                    #121c5a 52%,
+                    #3c176c 100%
+                );
+            border-radius: 26px;
+            box-shadow:
+                0 24px 60px rgba(7, 13, 45, 0.3);
+        }
+
+        .next-tournament-section::before {
+            content: "";
+            position: absolute;
+            top: -180px;
+            left: -140px;
+            width: 410px;
+            height: 410px;
+            border: 80px solid rgba(255, 255, 255, 0.035);
+            border-radius: 50%;
+        }
+
+        .next-tournament-section::after {
+            content: "";
+            position: absolute;
+            right: -190px;
+            bottom: -190px;
+            width: 460px;
+            height: 460px;
+            border: 90px solid rgba(255, 255, 255, 0.04);
+            border-radius: 50%;
+        }
+
+        .next-tournament-glow {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            width: 440px;
+            height: 260px;
+            background: rgba(238, 59, 123, 0.22);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            filter: blur(75px);
+        }
+
+        .next-tournament-content {
+            position: relative;
+            z-index: 1;
+            max-width: 950px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .euro-2028-logo {
+            display: block;
+            width: min(330px, 76vw);
+            max-height: 190px;
+            margin: 0 auto 1.5rem;
+            object-fit: contain;
+            filter:
+                drop-shadow(
+                    0 14px 22px rgba(0, 0, 0, 0.28)
+                );
+        }
+
+        .next-edition-label {
+            color: #cbd2ff;
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 0.19em;
+        }
+
+        .next-tournament-content h2 {
+            margin: 0.45rem 0 0;
+            font-size: clamp(2.3rem, 7vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: -0.05em;
+        }
+
+        .next-tournament-location {
+            margin: 0.15rem 0 2.3rem;
+            color: #dfe3ff;
+            font-size: 1.05rem;
+        }
+
+        .countdown-grid {
+            display: grid;
+            grid-template-columns:
+                minmax(90px, 1.25fr)
+                auto
+                minmax(75px, 1fr)
+                auto
+                minmax(75px, 1fr)
+                auto
+                minmax(75px, 1fr);
+            align-items: center;
+            gap: 0.7rem;
+            max-width: 830px;
+            margin: 0 auto;
+        }
+
+        .countdown-item {
+            padding: 1.25rem 0.65rem;
+            background: rgba(255, 255, 255, 0.09);
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 18px;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+        }
+
+        .countdown-number {
+            display: block;
+            font-size: clamp(2rem, 6vw, 4.4rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.05em;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown-label {
+            display: block;
+            margin-top: 0.65rem;
+            color: #cbd2ff;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .countdown-separator {
+            margin-top: -1.3rem;
+            color: rgba(255, 255, 255, 0.48);
+            font-size: 2.3rem;
+            font-weight: 900;
+        }
+
+        .tournament-start-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin-top: 2rem;
+            padding: 0.65rem 1rem;
+            color: #dfe3ff;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 767.98px) {
+            .premiados-section {
+                padding: 1.6rem 0.7rem 2rem;
+                border-radius: 18px;
+            }
+
+            .podium-wrapper {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+
+            .podium-first {
+                grid-row: 1;
+                min-height: 250px;
+            }
+
+            .podium-second {
+                grid-row: 2;
+                min-height: 215px;
+            }
+
+            .podium-third {
+                grid-row: 3;
+                min-height: 215px;
+            }
+
+            .wooden-spoon-card {
+                grid-template-columns: auto 1fr;
+                padding: 1rem;
+            }
+
+            .wooden-spoon-position {
+                grid-column: 1 / -1;
+                width: 54px;
+                min-width: 54px;
+                height: 54px;
+                margin: 0 auto;
+            }
+
+            .next-tournament-section {
+                margin-top: 1rem;
+                padding: 2.5rem 0.65rem;
+                border-radius: 18px;
+            }
+
+            .countdown-grid {
+                grid-template-columns:
+                    repeat(4, minmax(0, 1fr));
+                gap: 0.35rem;
+            }
+
+            .countdown-separator {
+                display: none;
+            }
+
+            .countdown-item {
+                padding: 0.9rem 0.25rem;
+                border-radius: 12px;
+            }
+
+            .countdown-number {
+                font-size: clamp(1.45rem, 8vw, 2.3rem);
+            }
+
+            .countdown-label {
+                font-size: 0.52rem;
+                letter-spacing: 0.05em;
+            }
+
+            .tournament-start-date {
+                font-size: 0.72rem;
+            }
+        }
+
+        /* =========================================================
+        CUENTA ATRÁS COMPACTA — ESCRITORIO Y MÓVIL
+        ========================================================= */
+
+        .cuentaatras-page {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(380px, 0.85fr);
+            gap: 1rem;
+            min-height: calc(100vh - 104px);
+            padding-bottom: 0;
+            align-items: stretch;
+        }
+
+        .premiados-section,
+        .next-tournament-section {
+            height: 100%;
+            margin: 0;
+            border-radius: 20px;
+        }
+
+        /* =========================
+        BLOQUE DE PREMIADOS
+        ========================= */
+
+        .premiados-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.2rem;
+        }
+
+        .premiados-title {
+            margin: 0 auto 1rem;
+        }
+
+        .premiados-kicker {
+            margin-bottom: 0.2rem;
+            font-size: 0.58rem;
+        }
+
+        .premiados-title h1 {
+            font-size: clamp(1.55rem, 2.5vw, 2.35rem);
+        }
+
+        .premiados-title p {
+            margin-top: 0.35rem;
+            font-size: 0.78rem;
+            line-height: 1.25;
+        }
+
+        .podium-wrapper {
+            gap: 0.65rem;
+            width: 100%;
+        }
+
+        .podium-card {
+            min-height: 155px;
+            padding: 1rem 0.55rem;
+            border-radius: 18px 18px 8px 8px;
+        }
+
+        .podium-first {
+            min-height: 205px;
+            padding-top: 1.65rem;
+        }
+
+        .podium-medal {
+            margin-bottom: 0.2rem;
+            font-size: 2.15rem;
+        }
+
+        .podium-position {
+            margin-bottom: 0.35rem;
+            font-size: 0.57rem;
+        }
+
+        .podium-card h2 {
+            font-size: clamp(0.88rem, 1.5vw, 1.15rem);
+            line-height: 1.1;
+        }
+
+        .podium-points {
+            margin-top: 0.65rem;
+            font-size: 1.45rem;
+        }
+
+        .podium-points span {
+            margin-top: 0.2rem;
+            font-size: 0.55rem;
+        }
+
+        .champion-crown {
+            top: 0.35rem;
+            font-size: 1.25rem;
+        }
+
+        .wooden-spoon-card {
+            gap: 0.65rem;
+            width: 100%;
+            margin-top: 0.85rem;
+            padding: 0.65rem 0.9rem;
+            border-radius: 13px;
+        }
+
+        .wooden-spoon-icon {
+            font-size: 1.8rem;
+        }
+
+        .wooden-spoon-label {
+            font-size: 0.52rem;
+        }
+
+        .wooden-spoon-info h2 {
+            font-size: 0.95rem;
+        }
+
+        .wooden-spoon-info p {
+            margin-top: 0.05rem;
+            font-size: 0.68rem;
+        }
+
+        .wooden-spoon-position {
+            min-width: 44px;
+            width: 44px;
+            height: 44px;
+            font-size: 0.82rem;
+        }
+
+        .final-ranking-action {
+            margin-top: 0.9rem;
+        }
+
+        .btn-final-ranking {
+            gap: 0.4rem;
+            padding: 0.65rem 1rem;
+            font-size: 0.76rem;
+        }
+
+        /* =========================
+        BLOQUE EURO 2028
+        ========================= */
+
+        .next-tournament-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.4rem 1rem;
+        }
+
+        .next-tournament-content {
+            width: 100%;
+        }
+
+        .euro-2028-logo {
+            width: min(220px, 65%);
+            max-height: 125px;
+            margin-bottom: 0.8rem;
+        }
+
+        .next-edition-label {
+            font-size: 0.55rem;
+        }
+
+        .next-tournament-content h2 {
+            margin-top: 0.2rem;
+            font-size: clamp(1.9rem, 4vw, 3rem);
+        }
+
+        .next-tournament-location {
+            margin: 0.05rem 0 1.1rem;
+            font-size: 0.82rem;
+        }
+
+        .countdown-grid {
+            gap: 0.3rem;
+        }
+
+        .countdown-item {
+            padding: 0.8rem 0.3rem;
+            border-radius: 12px;
+        }
+
+        .countdown-number {
+            font-size: clamp(1.65rem, 3.7vw, 2.7rem);
+        }
+
+        .countdown-label {
+            margin-top: 0.35rem;
+            font-size: 0.5rem;
+        }
+
+        .countdown-separator {
+            margin-top: -0.8rem;
+            font-size: 1.45rem;
+        }
+
+        .tournament-start-date {
+            margin-top: 1rem;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.68rem;
+        }
+
+        /* =========================================================
+        TABLET
+        ========================================================= */
+
+        @media (max-width: 991.98px) {
+            .cuentaatras-page {
+                grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+                gap: 0.7rem;
+            }
+
+            .premiados-section {
+                padding: 0.9rem;
+            }
+
+            .podium-card {
+                min-height: 145px;
+            }
+
+            .podium-first {
+                min-height: 185px;
+            }
+
+            .next-tournament-section {
+                padding: 1rem 0.65rem;
+            }
+
+            .countdown-number {
+                font-size: 1.75rem;
+            }
+        }
+
+        /* =========================================================
+        MÓVIL
+        ========================================================= */
+
+        @media (max-width: 767.98px) {
+            .cuentaatras-page {
+                display: flex;
+                flex-direction: column;
+                gap: 0.6rem;
+                min-height: auto;
+            }
+
+            .premiados-section,
+            .next-tournament-section {
+                height: auto;
+                border-radius: 15px;
+            }
+
+            .premiados-section {
+                padding: 0.75rem 0.55rem;
+            }
+
+            .premiados-title {
+                margin-bottom: 0.55rem;
+            }
+
+            .premiados-title h1 {
+                font-size: 1.35rem;
+            }
+
+            .premiados-title p {
+                display: none;
+            }
+
+            .podium-wrapper {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.4rem;
+            }
+
+            /*
+            * En móvil:
+            * campeón ocupa toda la primera fila;
+            * segundo y tercero comparten la segunda.
+            */
+
+            .podium-first {
+                grid-column: 1 / -1;
+                grid-row: 1;
+                min-height: 122px;
+            }
+
+            .podium-second {
+                grid-column: 1;
+                grid-row: 2;
+                min-height: 108px;
+            }
+
+            .podium-third {
+                grid-column: 2;
+                grid-row: 2;
+                min-height: 108px;
+            }
+
+            .podium-card {
+                padding: 0.55rem 0.35rem;
+                border-radius: 12px;
+            }
+
+            .podium-first {
+                padding-top: 1rem;
+            }
+
+            .podium-medal {
+                font-size: 1.45rem;
+            }
+
+            .podium-position {
+                margin-bottom: 0.15rem;
+                font-size: 0.47rem;
+            }
+
+            .podium-card h2 {
+                font-size: 0.78rem;
+            }
+
+            .podium-points {
+                margin-top: 0.3rem;
+                font-size: 1rem;
+            }
+
+            .podium-points span {
+                display: inline;
+                margin-left: 0.12rem;
+                font-size: 0.46rem;
+            }
+
+            .champion-crown {
+                top: 0.15rem;
+                font-size: 0.8rem;
+            }
+
+            .wooden-spoon-card {
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                margin-top: 0.45rem;
+                padding: 0.45rem 0.6rem;
+            }
+
+            .wooden-spoon-icon {
+                font-size: 1.35rem;
+            }
+
+            .wooden-spoon-info h2 {
+                font-size: 0.75rem;
+            }
+
+            .wooden-spoon-info p {
+                font-size: 0.56rem;
+            }
+
+            .wooden-spoon-position {
+                grid-column: auto;
+                min-width: 35px;
+                width: 35px;
+                height: 35px;
+                margin: 0;
+                font-size: 0.65rem;
+            }
+
+            .final-ranking-action {
+                margin-top: 0.5rem;
+            }
+
+            .btn-final-ranking {
+                width: 100%;
+                padding: 0.5rem 0.65rem;
+                font-size: 0.68rem;
+            }
+
+            .next-tournament-section {
+                margin-top: 0;
+                padding: 0.75rem 0.5rem;
+            }
+
+            .euro-2028-logo {
+                width: min(145px, 52vw);
+                max-height: 75px;
+                margin-bottom: 0.35rem;
+            }
+
+            .next-edition-label {
+                font-size: 0.45rem;
+            }
+
+            .next-tournament-content h2 {
+                margin-top: 0.1rem;
+                font-size: 1.55rem;
+            }
+
+            .next-tournament-location {
+                margin-bottom: 0.55rem;
+                font-size: 0.67rem;
+            }
+
+            .countdown-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.25rem;
+            }
+
+            .countdown-separator {
+                display: none;
+            }
+
+            .countdown-item {
+                padding: 0.5rem 0.1rem;
+                border-radius: 9px;
+            }
+
+            .countdown-number {
+                font-size: clamp(1.15rem, 7vw, 1.65rem);
+            }
+
+            .countdown-label {
+                margin-top: 0.2rem;
+                font-size: 0.42rem;
+                letter-spacing: 0;
+            }
+
+            .tournament-start-date {
+                margin-top: 0.55rem;
+                padding: 0.3rem 0.55rem;
+                font-size: 0.58rem;
+            }
+        }
+
+        /* Móviles especialmente pequeños o de poca altura */
+        @media (max-width: 390px), (max-height: 720px) and (max-width: 767.98px) {
+            .premiados-kicker {
+                display: none;
+            }
+
+            .premiados-title h1 {
+                font-size: 1.15rem;
+            }
+
+            .podium-first {
+                min-height: 105px;
+            }
+
+            .podium-second,
+            .podium-third {
+                min-height: 92px;
+            }
+
+            .wooden-spoon-info p {
+                display: none;
+            }
+
+            .next-tournament-content h2 {
+                font-size: 1.3rem;
+            }
+
+            .next-tournament-location {
+                margin-bottom: 0.35rem;
+            }
+        }
     </style>
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5L2TXE6QT2"></script>
-    <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+    <script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=G-5L2TXE6QT2"
+    ></script>
 
-    gtag('config', 'G-5L2TXE6QT2');
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag("js", new Date());
+        gtag("config", "G-5L2TXE6QT2");
     </script>
 
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-primary shadow-sm">
+<nav class="navbar navbar-expand-md navbar-dark bg-primary shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{% url 'inicio' %}">
+
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2"
+           href="{% url 'home' %}">
             <span>EuroMundialPorra</span>
         </a>
 
-        <a href="/admin/" class="btn btn-outline-light btn-sm">
-            <i class="bi bi-person-gear"></i>
-            Admin
-        </a>
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarEuroMundial"
+                aria-controls="navbarEuroMundial"
+                aria-expanded="false"
+                aria-label="Mostrar navegación">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarEuroMundial">
+            <div class="navbar-nav ms-auto mt-3 mt-md-0 align-items-md-center gap-2">
+
+                {% if request.user.is_authenticated and request.user.is_staff %}
+                    <a href="{% url 'inicio' %}" class="btn btn-light btn-sm text-primary fw-bold">
+                        <i class="bi bi-house-door-fill"></i> Inicio
+                    </a>
+                {% endif %}
+
+                <a href="/admin/" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-person-gear"></i> Admin
+                </a>
+
+            </div>
+        </div>
+
     </div>
 </nav>
 
-<main class="container py-4">
+<main
+    class="container
+    {% if request.resolver_match.url_name == 'cuentaatras' %}
+        py-2
+    {% else %}
+        py-4
+    {% endif %}"
+>
     {% block contenido %}{% endblock %}
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const tooltipTriggerList = document.querySelectorAll(
-        '[data-bs-toggle="tooltip"]'
-    );
+    document.addEventListener("DOMContentLoaded", function () {
+        const tooltipTriggerList = document.querySelectorAll(
+            '[data-bs-toggle="tooltip"]'
+        );
 
-    [...tooltipTriggerList].forEach(function (tooltipTriggerEl) {
-        new bootstrap.Tooltip(tooltipTriggerEl);
+        [...tooltipTriggerList].forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-});
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const btn = document.getElementById("btnIrArriba");
+    document.addEventListener("DOMContentLoaded", function () {
+        const btn = document.getElementById("btnIrArriba");
 
-    if (!btn) return;
+        if (!btn) {
+            return;
+        }
 
-    btn.addEventListener("click", function () {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
+        btn.addEventListener("click", function () {
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
         });
     });
-});
 </script>
 
 {% if request.resolver_match.url_name == "ver_apuestas" or request.resolver_match.url_name == "resultados" or request.resolver_match.url_name == "clasificacion" or request.resolver_match.url_name == "puntuaciones" %}
-<button type="button" id="btnIrArriba" class="btn-ir-arriba">
-    <i class="bi bi-arrow-up"></i>
-</button>
+    <button
+        type="button"
+        id="btnIrArriba"
+        class="btn-ir-arriba"
+        aria-label="Volver al principio"
+    >
+        <i class="bi bi-arrow-up"></i>
+    </button>
 {% endif %}
 
 <div id="loadingOverlay">
     <div class="loading-spinner">
-        <div class="spinner-border text-primary" role="status"></div>
+
+        <div
+            class="spinner-border text-primary"
+            role="status"
+        >
+            <span class="visually-hidden">
+                Cargando...
+            </span>
+        </div>
 
         <div class="mt-2 small fw-bold">
             Cargando...
         </div>
+
     </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
+        const overlay = document.getElementById("loadingOverlay");
 
-    const overlay = document.getElementById("loadingOverlay");
+        if (!overlay) {
+            return;
+        }
 
-    document.querySelectorAll("a").forEach(function (link) {
+        document.querySelectorAll("a").forEach(function (link) {
+            link.addEventListener("click", function () {
+                const href = link.getAttribute("href");
+                const target = link.getAttribute("target");
 
-        link.addEventListener("click", function (e) {
+                if (
+                    href &&
+                    href !== "" &&
+                    !href.startsWith("#") &&
+                    !href.startsWith("javascript:") &&
+                    !link.hasAttribute("data-bs-toggle") &&
+                    target !== "_blank"
+                ) {
+                    overlay.style.display = "flex";
+                }
+            });
+        });
 
-            const href = link.getAttribute("href");
-
-            if (
-                href &&
-                !href.startsWith("#") &&
-                !link.hasAttribute("data-bs-toggle")
-            ) {
+        document.querySelectorAll("form").forEach(function (form) {
+            form.addEventListener("submit", function () {
                 overlay.style.display = "flex";
-            }
-        });
-    });
-
-    document.querySelectorAll("form").forEach(function (form) {
-
-        form.addEventListener("submit", function () {
-            overlay.style.display = "flex";
+            });
         });
 
+        window.addEventListener("pageshow", function () {
+            overlay.style.display = "none";
+        });
     });
-
-});
 </script>
+
+{% block extra_js %}{% endblock %}
+
 </body>
 </html>

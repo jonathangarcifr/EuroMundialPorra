@@ -1,0 +1,420 @@
+{% extends "apuestas/base.html" %}
+{% load static %}
+
+{% block titulo_pagina %} - Próxima edición{% endblock %}
+
+{% block contenido %}
+
+<div class="cuentaatras-page">
+
+    <section class="premiados-section">
+
+        <div class="premiados-title">
+            <span class="premiados-kicker">
+                CUADRO DE HONOR
+            </span>
+
+            <h1>Premiados de la edición</h1>
+
+            <p>
+                La competición ha finalizado. Estos son los
+                protagonistas de la clasificación final.
+            </p>
+        </div>
+
+        <div class="podium-wrapper">
+
+            {% if segundo %}
+                <article class="podium-card podium-second">
+
+                    <div class="podium-medal">
+                        🥈
+                    </div>
+
+                    <div class="podium-position">
+                        2.º
+                    </div>
+
+                    <h2>
+                        {{ segundo.apuesta.nombre }}
+                    </h2>
+
+                    <div class="podium-points">
+                        {{ segundo.puntos_display }}
+                        <span>puntos</span>
+                    </div>
+
+                </article>
+            {% endif %}
+
+            {% if primero %}
+                <article class="podium-card podium-first">
+
+                    <div class="champion-crown">
+                        <i class="bi bi-crown-fill"></i>
+                    </div>
+
+                    <div class="podium-medal">
+                        🥇
+                    </div>
+
+                    <div class="podium-position">
+                        CAMPEÓN
+                    </div>
+
+                    <h2>
+                        {{ primero.apuesta.nombre }}
+                    </h2>
+
+                    <div class="podium-points">
+                        {{ primero.puntos_display }}
+                        <span>puntos</span>
+                    </div>
+
+                </article>
+            {% endif %}
+
+            {% if tercero %}
+                <article class="podium-card podium-third">
+
+                    <div class="podium-medal">
+                        🥉
+                    </div>
+
+                    <div class="podium-position">
+                        3.º
+                    </div>
+
+                    <h2>
+                        {{ tercero.apuesta.nombre }}
+                    </h2>
+
+                    <div class="podium-points">
+                        {{ tercero.puntos_display }}
+                        <span>puntos</span>
+                    </div>
+
+                </article>
+            {% endif %}
+
+        </div>
+
+        {% if ultimo %}
+            <article class="wooden-spoon-card">
+
+                <div class="wooden-spoon-icon">
+                    🥄
+                </div>
+
+                <div class="wooden-spoon-info">
+
+                    <span class="wooden-spoon-label">
+                        CUCHARA DE MADERA
+                    </span>
+
+                    <h2>
+                        {{ ultimo.apuesta.nombre }}
+                    </h2>
+
+                    <p>
+                        Último clasificado con
+                        <strong>
+                            {{ ultimo.puntos_display }} puntos
+                        </strong>
+                    </p>
+
+                </div>
+
+                <div class="wooden-spoon-position">
+                    {{ ultimo.posicion }}.º
+                </div>
+
+            </article>
+        {% endif %}
+
+        <div class="final-ranking-action">
+
+            <a
+                href="{% url 'clasificacion' %}"
+                class="btn-final-ranking"
+            >
+                <i class="bi bi-trophy-fill"></i>
+                Ver clasificación final completa
+                <i class="bi bi-arrow-right"></i>
+            </a>
+
+        </div>
+
+    </section>
+
+    <section class="next-tournament-section">
+
+        <div class="next-tournament-glow"></div>
+
+        <div class="next-tournament-content">
+
+            <img
+                src="{% static 'apuestas/img/UEFA_Euro_2028_logo.svg' %}"
+                alt="UEFA Euro 2028 - Reino Unido e Irlanda"
+                class="euro-2028-logo"
+            >
+
+            <span class="next-edition-label">
+                LA PRÓXIMA EDICIÓN COMIENZA EN
+            </span>
+
+            <h2>
+                Euro 2028
+            </h2>
+
+            <p class="next-tournament-location">
+                Reino Unido e Irlanda
+            </p>
+
+            <div
+                id="countdownEuro2028"
+                class="countdown-grid"
+                data-target="{{ fecha_inicio_torneo }}"
+            >
+
+                <div class="countdown-item">
+                    <span
+                        id="countdownDays"
+                        class="countdown-number"
+                    >
+                        000
+                    </span>
+                    <span class="countdown-label">
+                        Días
+                    </span>
+                </div>
+
+                <div class="countdown-separator">
+                    :
+                </div>
+
+                <div class="countdown-item">
+                    <span
+                        id="countdownHours"
+                        class="countdown-number"
+                    >
+                        00
+                    </span>
+                    <span class="countdown-label">
+                        Horas
+                    </span>
+                </div>
+
+                <div class="countdown-separator">
+                    :
+                </div>
+
+                <div class="countdown-item">
+                    <span
+                        id="countdownMinutes"
+                        class="countdown-number"
+                    >
+                        00
+                    </span>
+                    <span class="countdown-label">
+                        Minutos
+                    </span>
+                </div>
+
+                <div class="countdown-separator">
+                    :
+                </div>
+
+                <div class="countdown-item">
+                    <span
+                        id="countdownSeconds"
+                        class="countdown-number"
+                    >
+                        00
+                    </span>
+                    <span class="countdown-label">
+                        Segundos
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="tournament-start-date">
+                <i class="bi bi-calendar-event"></i>
+                9 de junio de 2028 · 21:00 h
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const countdown = document.getElementById(
+        "countdownEuro2028"
+    );
+
+    if (!countdown) {
+        return;
+    }
+
+    const targetDate = new Date(
+        countdown.dataset.target
+    ).getTime();
+
+    const daysElement = document.getElementById(
+        "countdownDays"
+    );
+
+    const hoursElement = document.getElementById(
+        "countdownHours"
+    );
+
+    const minutesElement = document.getElementById(
+        "countdownMinutes"
+    );
+
+    const secondsElement = document.getElementById(
+        "countdownSeconds"
+    );
+
+    function formatNumber(value, minimumLength) {
+        return String(value).padStart(
+            minimumLength,
+            "0"
+        );
+    }
+
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance <= 0) {
+            daysElement.textContent = "000";
+            hoursElement.textContent = "00";
+            minutesElement.textContent = "00";
+            secondsElement.textContent = "00";
+
+            clearInterval(countdownInterval);
+            return;
+        }
+
+        const days = Math.floor(
+            distance / (1000 * 60 * 60 * 24)
+        );
+
+        const hours = Math.floor(
+            (
+                distance % (1000 * 60 * 60 * 24)
+            ) / (1000 * 60 * 60)
+        );
+
+        const minutes = Math.floor(
+            (
+                distance % (1000 * 60 * 60)
+            ) / (1000 * 60)
+        );
+
+        const seconds = Math.floor(
+            (
+                distance % (1000 * 60)
+            ) / 1000
+        );
+
+        daysElement.textContent = formatNumber(
+            days,
+            3
+        );
+
+        hoursElement.textContent = formatNumber(
+            hours,
+            2
+        );
+
+        minutesElement.textContent = formatNumber(
+            minutes,
+            2
+        );
+
+        secondsElement.textContent = formatNumber(
+            seconds,
+            2
+        );
+    }
+
+    updateCountdown();
+
+    let countdownInterval = null;
+
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance <= 0) {
+            daysElement.textContent = "000";
+            hoursElement.textContent = "00";
+            minutesElement.textContent = "00";
+            secondsElement.textContent = "00";
+
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            return;
+        }
+
+        const days = Math.floor(
+            distance / (1000 * 60 * 60 * 24)
+        );
+
+        const hours = Math.floor(
+            (
+                distance % (1000 * 60 * 60 * 24)
+            ) / (1000 * 60 * 60)
+        );
+
+        const minutes = Math.floor(
+            (
+                distance % (1000 * 60 * 60)
+            ) / (1000 * 60)
+        );
+
+        const seconds = Math.floor(
+            (
+                distance % (1000 * 60)
+            ) / 1000
+        );
+
+        daysElement.textContent = formatNumber(
+            days,
+            3
+        );
+
+        hoursElement.textContent = formatNumber(
+            hours,
+            2
+        );
+
+        minutesElement.textContent = formatNumber(
+            minutes,
+            2
+        );
+
+        secondsElement.textContent = formatNumber(
+            seconds,
+            2
+        );
+    }
+
+    updateCountdown();
+
+    countdownInterval = setInterval(
+        updateCountdown,
+        1000
+    );
+});
+</script>
+
+{% endblock %}

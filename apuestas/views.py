@@ -315,210 +315,7 @@ def resultados(request):
 
 
 def clasificacion(request):
-    datos_cache = cache.get(CLAVE_CACHE_CLASIFICACION)
-
-    if datos_cache is not None:
-        return render(
-            request,
-            "apuestas/clasificacion.html",
-            datos_cache,
-        )
-    
-    equipos_eliminados = obtener_equipos_eliminados()
-
-    info_equipos_base = {
-        nombre_equipo: obtener_info_equipo(
-            nombre_equipo,
-            equipos_eliminados,
-        )
-        for nombre_equipo, _ in TODOS_EQUIPOS
-    }
-
-    fase_actual = obtener_fase_actual_partidos()
-    equipos_que_ya_jugaron_fase_actual = set()
-
-    if fase_actual:
-        partidos_jugados_fase_actual = Partido.objects.filter(
-            fase=fase_actual,
-            jugado=True,
-        )
-
-        for partido in partidos_jugados_fase_actual:
-            equipos_que_ya_jugaron_fase_actual.add(partido.equipo_local)
-            equipos_que_ya_jugaron_fase_actual.add(partido.equipo_visitante)
-
-    apuestas = sorted(
-        Apuesta.objects.all(),
-        key=lambda a: clave_orden_nombre(a.nombre),
-    )
-
-    puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
-
-    clasificacion_data = []
-
-    for apuesta in apuestas:
-        (
-            puntos_equipos,
-            puntos_goleador,
-            puntos_totales,
-            _,
-        ) = calcular_puntos_apuesta(
-            apuesta,
-            puntos_equipos_globales,
-            puntos_goleadores_globales,
-        )
-
-        equipos = []
-
-        for i in range(1, 13):
-            nombre_equipo = getattr(apuesta, f"equipo_{i}")
-
-            info = info_equipos_base[nombre_equipo].copy()
-
-            info["puntos"] = puntos_equipos_globales.get(
-                nombre_equipo,
-                {"TOTAL": 0}
-            ).get("TOTAL", 0)
-
-            info["pendiente_fase_actual"] = (
-                fase_actual
-                and nombre_equipo not in equipos_que_ya_jugaron_fase_actual
-                and nombre_equipo not in equipos_eliminados
-            )
-
-            equipos.append(info)
-
-        equipos_pendientes = sum(
-            1
-            for equipo in equipos
-            if equipo.get("pendiente_fase_actual")
-        )
-
-        equipos_eliminados_count = sum(
-            1
-            for equipo in equipos
-            if equipo.get("eliminado")
-        )
-
-        info_equipos_base = {
-            nombre: obtener_info_equipo(nombre, equipos_eliminados)
-            for nombre, _ in TODOS_EQUIPOS
-        }
-
-        equipos_activos = 12 - equipos_eliminados_count
-
-        equipos_jugados = 12 - equipos_pendientes
-
-        goleador_eliminado = apuesta.equipo_goleador in equipos_eliminados
-
-        goleador_ha_jugado = (
-            fase_actual
-            and apuesta.equipo_goleador in equipos_que_ya_jugaron_fase_actual
-            and not goleador_eliminado
-        )
-        
-        equipo_goleador_info = info_equipos_base[
-            apuesta.equipo_goleador
-        ].copy()
-
-        equipo_goleador_info["pendiente_fase_actual"] = (
-            fase_actual
-            and apuesta.equipo_goleador not in equipos_que_ya_jugaron_fase_actual
-            and apuesta.equipo_goleador not in equipos_eliminados
-        )
-
-        pendientes_detalle = []
-
-        for equipo in equipos:
-            if equipo.get("pendiente_fase_actual"):
-                pendientes_detalle.append(equipo["codigo"])
-
-        if equipo_goleador_info["pendiente_fase_actual"]:
-            pendientes_detalle.append(apuesta.goleador)
-
-        clasificacion_data.append({
-            "apuesta": apuesta,
-            "equipos": equipos,
-            "equipo_goleador_info": {
-                **equipo_goleador_info,
-                "puntos": puntos_goleador,
-            },
-            "puntos_equipos": puntos_equipos,
-            "puntos_goleador": puntos_goleador,
-            "puntos_totales": puntos_totales,
-            "puntos_display": (
-                f"{puntos_equipos + puntos_goleador}"
-                f".{puntos_goleador:02d}"
-            ),
-            "equipos_pendientes": equipos_pendientes,
-            "equipos_jugados": equipos_jugados,
-            "goleador_ha_jugado": goleador_ha_jugado,
-            "pendientes_detalle": pendientes_detalle,
-            "equipos_activos": equipos_activos,
-            "equipos_eliminados_count": equipos_eliminados_count,
-            "goleador_eliminado": goleador_eliminado,
-        })
-
-    clasificacion_data.sort(
-        key=lambda x: (
-            -x["puntos_totales"],
-            clave_orden_nombre(x["apuesta"].nombre),
-        )
-    )
-
-    asignar_posiciones(clasificacion_data)
-
-    for item in clasificacion_data:
-        detalle_modal = {
-            "posicion": item["posicion"],
-            "nombre": item["apuesta"].nombre,
-            "puntos": item["puntos_display"],
-            "equipos_jugados": item["equipos_jugados"],
-            "equipos_pendientes": item["equipos_pendientes"],
-            "pendientes_detalle": item["pendientes_detalle"],
-            "equipos": [
-                {
-                    "nombre": equipo["nombre"],
-                    "codigo": equipo["codigo"],
-                    "flag": equipo["flag"],
-                    "eliminado": bool(equipo["eliminado"]),
-                    "pendiente": bool(equipo.get("pendiente_fase_actual")),
-                }
-                for equipo in item["equipos"]
-            ],
-            "goleador": {
-                "nombre": item["apuesta"].goleador,
-                "equipo": item["equipo_goleador_info"]["nombre"],
-                "flag": item["equipo_goleador_info"]["flag"],
-                "eliminado": bool(
-                    item["equipo_goleador_info"]["eliminado"]
-                ),
-                "pendiente": bool(
-                    item["equipo_goleador_info"].get(
-                        "pendiente_fase_actual"
-                    )
-                ),
-            },
-        }
-
-        item["modal_json"] = json.dumps(
-            detalle_modal,
-            ensure_ascii=False,
-        )
-
-    resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
-
-    contexto = {
-        "clasificacion": clasificacion_data,
-        "resumen_ideal_cuchara": resumen_ideal_cuchara,
-        "fase_actual": fase_actual,
-    }
-
-    cache.set(
-        CLAVE_CACHE_CLASIFICACION,
-        contexto,
-        TIEMPO_CACHE_CLASIFICACION,
-    )
+    contexto = obtener_contexto_clasificacion()
 
     return render(
         request,
@@ -540,6 +337,284 @@ def asignar_posiciones(clasificacion_data):
 
         item["posicion"] = posicion_real
         puntos_anteriores = item["puntos_totales"]
+
+
+def cuentaatras(request):
+    contexto_clasificacion = obtener_contexto_clasificacion()
+
+    clasificacion_completa = contexto_clasificacion.get(
+        "clasificacion",
+        [],
+    )
+
+    primero = (
+        clasificacion_completa[0]
+        if len(clasificacion_completa) >= 1
+        else None
+    )
+
+    segundo = (
+        clasificacion_completa[1]
+        if len(clasificacion_completa) >= 2
+        else None
+    )
+
+    tercero = (
+        clasificacion_completa[2]
+        if len(clasificacion_completa) >= 3
+        else None
+    )
+
+    ultimo = (
+        clasificacion_completa[-1]
+        if clasificacion_completa
+        else None
+    )
+
+    contexto = {
+        "primero": primero,
+        "segundo": segundo,
+        "tercero": tercero,
+        "ultimo": ultimo,
+        "fecha_inicio_torneo": "2028-06-09T21:00:00+02:00",
+    }
+
+    return render(
+        request,
+        "apuestas/cuentaatras.html",
+        contexto,
+    )
+
+
+def obtener_contexto_clasificacion():
+    datos_cache = cache.get(CLAVE_CACHE_CLASIFICACION)
+
+    if datos_cache is not None:
+        return datos_cache
+
+    equipos_eliminados = obtener_equipos_eliminados()
+    fase_actual = obtener_fase_actual_partidos()
+
+    info_equipos_base = {
+        nombre_equipo: obtener_info_equipo(
+            nombre_equipo,
+            equipos_eliminados,
+        )
+        for nombre_equipo, _ in TODOS_EQUIPOS
+    }
+
+    puntos_equipos_globales, puntos_goleadores_globales = (
+        calcular_puntuaciones_globales()
+    )
+
+    apuestas = list(
+        Apuesta.objects.all().order_by("nombre")
+    )
+
+    clasificacion_data = []
+
+    equipos_que_ya_jugaron_fase_actual = set()
+
+    if fase_actual:
+        partidos_jugados_fase_actual = Partido.objects.filter(
+            fase=fase_actual,
+            jugado=True,
+        ).only(
+            "equipo_local",
+            "equipo_visitante",
+        )
+
+        for partido in partidos_jugados_fase_actual:
+            equipos_que_ya_jugaron_fase_actual.add(
+                partido.equipo_local
+            )
+            equipos_que_ya_jugaron_fase_actual.add(
+                partido.equipo_visitante
+            )
+
+    for apuesta in apuestas:
+        (
+            puntos_equipos,
+            puntos_goleador,
+            puntos_totales_orden,
+            detalle_equipos,
+        ) = calcular_puntos_apuesta(
+            apuesta,
+            puntos_equipos_globales,
+            puntos_goleadores_globales,
+        )
+
+        equipos_apuesta = []
+
+        nombres_equipos = [
+            apuesta.equipo_1,
+            apuesta.equipo_2,
+            apuesta.equipo_3,
+            apuesta.equipo_4,
+            apuesta.equipo_5,
+            apuesta.equipo_6,
+            apuesta.equipo_7,
+            apuesta.equipo_8,
+            apuesta.equipo_9,
+            apuesta.equipo_10,
+            apuesta.equipo_11,
+            apuesta.equipo_12,
+        ]
+
+        equipos_jugados = 0
+        equipos_pendientes = 0
+        pendientes_detalle = []
+
+        for nombre_equipo in nombres_equipos:
+            info = info_equipos_base[nombre_equipo].copy()
+
+            pendiente_fase_actual = bool(
+                fase_actual
+                and nombre_equipo not in equipos_que_ya_jugaron_fase_actual
+                and nombre_equipo not in equipos_eliminados
+            )
+
+            info["pendiente_fase_actual"] = pendiente_fase_actual
+
+            if pendiente_fase_actual:
+                equipos_pendientes += 1
+                pendientes_detalle.append(info["codigo"])
+            else:
+                equipos_jugados += 1
+
+            equipos_apuesta.append(info)
+
+        equipo_goleador_info = info_equipos_base[
+            apuesta.equipo_goleador
+        ].copy()
+
+        goleador_pendiente = bool(
+            fase_actual
+            and apuesta.equipo_goleador
+            not in equipos_que_ya_jugaron_fase_actual
+            and apuesta.equipo_goleador not in equipos_eliminados
+        )
+
+        equipo_goleador_info[
+            "pendiente_fase_actual"
+        ] = goleador_pendiente
+
+        if goleador_pendiente:
+            pendientes_detalle.append(
+                equipo_goleador_info["codigo"]
+            )
+
+        clasificacion_data.append({
+            "apuesta": apuesta,
+            "equipos": equipos_apuesta,
+            "equipo_goleador_info": equipo_goleador_info,
+
+            "puntos": puntos_equipos + puntos_goleador,
+            "puntos_equipos": puntos_equipos,
+            "puntos_goleador": puntos_goleador,
+
+            "puntos_display": (
+                f"{puntos_equipos + puntos_goleador}"
+                f".{puntos_goleador:02d}"
+            ),
+
+            "puntos_totales": puntos_totales_orden,
+
+            "detalle_equipos": detalle_equipos,
+            "equipos_jugados": equipos_jugados,
+            "equipos_pendientes": equipos_pendientes,
+            "pendientes_detalle": pendientes_detalle,
+        })
+
+    clasificacion_data.sort(
+        key=lambda item: (
+            -item["puntos_totales"],
+            clave_orden_nombre(item["apuesta"].nombre),
+        )
+    )
+
+    asignar_posiciones(clasificacion_data)
+
+    for item in clasificacion_data:
+        detalle_modal = {
+            "posicion": item.get("posicion", ""),
+            "nombre": item["apuesta"].nombre,
+            "puntos": item.get("puntos_display", "0"),
+            "equipos_jugados": item.get(
+                "equipos_jugados",
+                0,
+            ),
+            "equipos_pendientes": item.get(
+                "equipos_pendientes",
+                0,
+            ),
+            "pendientes_detalle": item.get(
+                "pendientes_detalle",
+                [],
+            ),
+            "equipos": [
+                {
+                    "nombre": equipo.get("nombre", ""),
+                    "codigo": equipo.get("codigo", ""),
+                    "flag": equipo.get("flag", ""),
+                    "eliminado": bool(
+                        equipo.get("eliminado", False)
+                    ),
+                    "pendiente": bool(
+                        equipo.get(
+                            "pendiente_fase_actual",
+                            False,
+                        )
+                    ),
+                }
+                for equipo in item.get("equipos", [])
+            ],
+            "goleador": {
+                "nombre": item["apuesta"].goleador,
+                "equipo": item[
+                    "equipo_goleador_info"
+                ].get(
+                    "nombre",
+                    item["apuesta"].equipo_goleador,
+                ),
+                "flag": item[
+                    "equipo_goleador_info"
+                ].get("flag", ""),
+                "eliminado": bool(
+                    item[
+                        "equipo_goleador_info"
+                    ].get("eliminado", False)
+                ),
+                "pendiente": bool(
+                    item[
+                        "equipo_goleador_info"
+                    ].get(
+                        "pendiente_fase_actual",
+                        False,
+                    )
+                ),
+            },
+        }
+
+        item["modal_json"] = json.dumps(
+            detalle_modal,
+            ensure_ascii=False,
+        )
+
+    contexto = {
+        "clasificacion": clasificacion_data,
+        "resumen_ideal_cuchara": (
+            obtener_resumen_ideal_cuchara()
+        ),
+    }
+
+    cache.set(
+        CLAVE_CACHE_CLASIFICACION,
+        contexto,
+        TIEMPO_CACHE_CLASIFICACION,
+    )
+
+    return contexto
 
 
 def obtener_datos_clasificacion():
