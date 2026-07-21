@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 from django.db.models import Prefetch
+from django.core.cache import cache
+
 
 from .models import Partido, Apuesta, GoleadorPartido, GoleadorTorneo
 from .forms import ApuestaForm, PartidoForm
@@ -22,6 +24,10 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
 
 import unicodedata
+import json
+
+CLAVE_CACHE_CLASIFICACION = "clasificacion_completa_v1"
+TIEMPO_CACHE_CLASIFICACION = 3600
 
 
 def inicio(request):
@@ -309,9 +315,26 @@ def resultados(request):
 
 
 def clasificacion(request):
-    equipos_eliminados = obtener_equipos_eliminados()
-    fase_actual = obtener_fase_actual_partidos()
+    datos_cache = cache.get(CLAVE_CACHE_CLASIFICACION)
 
+    if datos_cache is not None:
+        return render(
+            request,
+            "apuestas/clasificacion.html",
+            datos_cache,
+        )
+    
+    equipos_eliminados = obtener_equipos_eliminados()
+
+    info_equipos_base = {
+        nombre_equipo: obtener_info_equipo(
+            nombre_equipo,
+            equipos_eliminados,
+        )
+        for nombre_equipo, _ in TODOS_EQUIPOS
+    }
+
+    fase_actual = obtener_fase_actual_partidos()
     equipos_que_ya_jugaron_fase_actual = set()
 
     if fase_actual:
@@ -350,7 +373,7 @@ def clasificacion(request):
         for i in range(1, 13):
             nombre_equipo = getattr(apuesta, f"equipo_{i}")
 
-            info = obtener_info_equipo(nombre_equipo, equipos_eliminados)
+            info = info_equipos_base[nombre_equipo].copy()
 
             info["puntos"] = puntos_equipos_globales.get(
                 nombre_equipo,
@@ -377,6 +400,11 @@ def clasificacion(request):
             if equipo.get("eliminado")
         )
 
+        info_equipos_base = {
+            nombre: obtener_info_equipo(nombre, equipos_eliminados)
+            for nombre, _ in TODOS_EQUIPOS
+        }
+
         equipos_activos = 12 - equipos_eliminados_count
 
         equipos_jugados = 12 - equipos_pendientes
@@ -389,10 +417,9 @@ def clasificacion(request):
             and not goleador_eliminado
         )
         
-        equipo_goleador_info = obtener_info_equipo(
-            apuesta.equipo_goleador,
-            equipos_eliminados,
-        )
+        equipo_goleador_info = info_equipos_base[
+            apuesta.equipo_goleador
+        ].copy()
 
         equipo_goleador_info["pendiente_fase_actual"] = (
             fase_actual
@@ -441,17 +468,64 @@ def clasificacion(request):
 
     asignar_posiciones(clasificacion_data)
 
+    for item in clasificacion_data:
+        detalle_modal = {
+            "posicion": item["posicion"],
+            "nombre": item["apuesta"].nombre,
+            "puntos": item["puntos_display"],
+            "equipos_jugados": item["equipos_jugados"],
+            "equipos_pendientes": item["equipos_pendientes"],
+            "pendientes_detalle": item["pendientes_detalle"],
+            "equipos": [
+                {
+                    "nombre": equipo["nombre"],
+                    "codigo": equipo["codigo"],
+                    "flag": equipo["flag"],
+                    "eliminado": bool(equipo["eliminado"]),
+                    "pendiente": bool(equipo.get("pendiente_fase_actual")),
+                }
+                for equipo in item["equipos"]
+            ],
+            "goleador": {
+                "nombre": item["apuesta"].goleador,
+                "equipo": item["equipo_goleador_info"]["nombre"],
+                "flag": item["equipo_goleador_info"]["flag"],
+                "eliminado": bool(
+                    item["equipo_goleador_info"]["eliminado"]
+                ),
+                "pendiente": bool(
+                    item["equipo_goleador_info"].get(
+                        "pendiente_fase_actual"
+                    )
+                ),
+            },
+        }
+
+        item["modal_json"] = json.dumps(
+            detalle_modal,
+            ensure_ascii=False,
+        )
+
     resumen_ideal_cuchara = obtener_resumen_ideal_cuchara()
+
+    contexto = {
+        "clasificacion": clasificacion_data,
+        "resumen_ideal_cuchara": resumen_ideal_cuchara,
+        "fase_actual": fase_actual,
+    }
+
+    cache.set(
+        CLAVE_CACHE_CLASIFICACION,
+        contexto,
+        TIEMPO_CACHE_CLASIFICACION,
+    )
 
     return render(
         request,
         "apuestas/clasificacion.html",
-        {
-            "clasificacion": clasificacion_data,
-            "resumen_ideal_cuchara": resumen_ideal_cuchara,
-            "fase_actual": fase_actual,
-        },
+        contexto,
     )
+
 
 def asignar_posiciones(clasificacion_data):
     posicion = 0
@@ -470,7 +544,9 @@ def asignar_posiciones(clasificacion_data):
 
 def obtener_datos_clasificacion():
     equipos_eliminados = obtener_equipos_eliminados()
-    apuestas = Apuesta.objects.all()
+    apuestas = list(
+        Apuesta.objects.all().order_by("nombre")
+    )
 
     puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
 
@@ -865,7 +941,9 @@ def puntuaciones(request):
     puntos_equipos_globales, puntos_goleadores_globales = calcular_puntuaciones_globales()
     equipos_eliminados = obtener_equipos_eliminados()
 
-    apuestas = Apuesta.objects.all()
+    apuestas = list(
+        Apuesta.objects.all().order_by("nombre")
+    )
 
     conteo_selecciones = {}
 
@@ -957,6 +1035,14 @@ def puntuaciones(request):
     )
 
 def obtener_resumen_ideal_cuchara():
+
+    cache_key = "resumen_ideal_cuchara"
+
+    resumen_cache = cache.get(cache_key)
+
+    if resumen_cache is not None:
+        return resumen_cache
+    
     bombos = [BOMBO_1, BOMBO_2, BOMBO_3, BOMBO_4, BOMBO_5, BOMBO_6]
 
     equipos_eliminados = obtener_equipos_eliminados()
@@ -1136,10 +1222,14 @@ def obtener_resumen_ideal_cuchara():
 
         return mejor
 
-    return [
+    resultado = [
         construir_fila("APUESTA IDEAL"),
         construir_fila("CUCHARA DE MADERA"),
     ]
+
+    cache.set(cache_key, resultado, 3600)
+
+    return resultado
 
 PARTIDOS_ESPERADOS_FASE = {
     "1/16": 16,
@@ -1164,14 +1254,30 @@ FASES_ELIMINACION = ["1/16", "1/8", "1/4", "1/2", "FINAL"]
 
 
 def obtener_equipos_eliminados():
+    cache_key = "equipos_eliminados"
+
+    equipos_eliminados_cache = cache.get(cache_key)
+
+    if equipos_eliminados_cache is not None:
+        return set(equipos_eliminados_cache)
+
     equipos_vivos = set(nombre for nombre, _ in TODOS_EQUIPOS)
     equipos_eliminados = set()
 
-    # Regla 1: cuando se complete una fase de cruces, los que no aparezcan quedan eliminados
     for fase in FASES_ELIMINACION:
-        partidos_fase = Partido.objects.filter(fase=fase)
+        partidos_fase = list(
+            Partido.objects
+            .filter(fase=fase)
+            .only(
+                "equipo_local",
+                "equipo_visitante",
+                "jugado",
+                "goles_local",
+                "goles_visitante",
+            )
+        )
 
-        if partidos_fase.count() < PARTIDOS_ESPERADOS_FASE[fase]:
+        if len(partidos_fase) < PARTIDOS_ESPERADOS_FASE[fase]:
             break
 
         equipos_fase = set()
@@ -1180,22 +1286,31 @@ def obtener_equipos_eliminados():
             equipos_fase.add(partido.equipo_local)
             equipos_fase.add(partido.equipo_visitante)
 
-        eliminados_en_fase = equipos_vivos - equipos_fase
-        equipos_eliminados.update(eliminados_en_fase)
-
+        equipos_eliminados.update(equipos_vivos - equipos_fase)
         equipos_vivos = equipos_fase
 
-    # Regla 2: en cruces, quien pierde un partido jugado queda eliminado automáticamente
-    partidos_eliminatorias_jugados = Partido.objects.filter(
-        fase__in=FASES_ELIMINACION,
-        jugado=True,
+    partidos_eliminatorias = (
+        Partido.objects
+        .filter(
+            fase__in=FASES_ELIMINACION,
+            jugado=True,
+        )
+        .only(
+            "equipo_local",
+            "equipo_visitante",
+            "goles_local",
+            "goles_visitante",
+        )
     )
 
-    for partido in partidos_eliminatorias_jugados:
+    for partido in partidos_eliminatorias:
         if partido.goles_local > partido.goles_visitante:
             equipos_eliminados.add(partido.equipo_visitante)
+
         elif partido.goles_visitante > partido.goles_local:
             equipos_eliminados.add(partido.equipo_local)
+
+    cache.set(cache_key, list(equipos_eliminados), 3600)
 
     return equipos_eliminados
 

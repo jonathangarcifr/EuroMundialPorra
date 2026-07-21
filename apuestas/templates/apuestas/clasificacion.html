@@ -343,10 +343,12 @@
 
                         <td class="text-center">
                             <button
-                                type="button"
-                                class="btn-info-mobile-clean"
+                            type="button"
+                                class="btn-info-mobile-clean btn-detalle-clasificacion"
                                 data-bs-toggle="modal"
-                                data-bs-target="#modalClasificacion{{ forloop.counter }}"
+                                data-bs-target="#modalClasificacion"
+                                data-detalle="{{ item.modal_json|escape }}"
+                                aria-label="Ver detalle de {{ item.apuesta.nombre }}"
                             >
                                 <i class="bi bi-plus-circle"></i>
                             </button>
@@ -359,79 +361,57 @@
 
 </div>
 
-{% for item in clasificacion %}
-<div class="modal fade" id="modalClasificacion{{ forloop.counter }}" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="modalClasificacion" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
 
             <div class="modal-header bg-primary text-white">
                 <div class="modal-title w-100 modal-clasificacion-header">
-                    <div class="modal-clasificacion-pos">
-                        {% if item.posicion == 1 %}
-                            🥇
-                        {% elif item.posicion == 2 %}
-                            🥈
-                        {% elif item.posicion == 3 %}
-                            🥉
-                        {% else %}
-                            <span class="badge bg-secondary badge-posicion-modal">
-                                {{ item.posicion }}
-                            </span>
-                        {% endif %}
-                    </div>
 
-                    <div class="modal-clasificacion-nombre">
-                        {{ item.apuesta.nombre }}
-                    </div>
+                    <div
+                        id="modalClasificacionPosicion"
+                        class="modal-clasificacion-pos"
+                    ></div>
+
+                    <div
+                        id="modalClasificacionNombre"
+                        class="modal-clasificacion-nombre"
+                    ></div>
+
                 </div>
 
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                ></button>
             </div>
 
             <div class="modal-body">
 
-                <div class="modal-equipos-grid">
-                    {% for equipo in item.equipos %}
-                        <div class="modal-equipo {% if equipo.eliminado %}equipo-eliminado{% elif equipo.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}">
-                            <img src="https://flagcdn.com/w20/{{ equipo.flag }}.png">
-                            {{ equipo.codigo }}
-                        </div>
-                    {% endfor %}
-                </div>
+                <div
+                    id="modalClasificacionEquipos"
+                    class="modal-equipos-grid"
+                ></div>
 
-                <hr class="my-2">
+                <hr class="my-3">
 
-                <div class="modal-goleador text-center {% if item.equipo_goleador_info.eliminado %}equipo-eliminado{% elif item.equipo_goleador_info.pendiente_fase_actual %}equipo-pendiente-fase{% endif %}">
-                    <img src="https://flagcdn.com/w20/{{ item.equipo_goleador_info.flag }}.png">
-                    {{ item.apuesta.goleador }}
-                </div>
+                <div
+                    id="modalClasificacionGoleador"
+                    class="modal-goleador text-center"
+                ></div>
 
-                <hr class="my-2">
+                <hr class="my-3">
 
-                {% if item.pendientes_detalle %}
-                    <div class="small fw-bold text-center mb-2">
-                        Aún por jugar en esta fase:
-                    </div>
+                <div id="modalClasificacionPendientes"></div>
 
-                    <div class="text-center">
-                        {% for pendiente in item.pendientes_detalle %}
-                            <span class="badge badge-pendiente-fase">
-                                {{ pendiente }}
-                            </span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="small fw-bold text-center mb-2">
-                        Todas los equipos y el goleador ya han jugado en esta fase.
-                    </div>
-                {% endif %}
-
-                <hr class="my-2">
+                <hr class="my-3">
 
                 <div class="text-center">
-                    <span class="fw-bold text-primary">
-                        {{ item.puntos_display }} puntos
-                    </span>
+                    <span
+                        id="modalClasificacionPuntos"
+                        class="fw-bold text-primary"
+                    ></span>
                 </div>
 
             </div>
@@ -439,7 +419,142 @@
         </div>
     </div>
 </div>
-{% endfor %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("modalClasificacion");
+
+    if (!modal) return;
+
+    function escaparHtml(valor) {
+        const elemento = document.createElement("div");
+        elemento.textContent = valor ?? "";
+        return elemento.innerHTML;
+    }
+
+    modal.addEventListener("show.bs.modal", function (event) {
+        const boton = event.relatedTarget;
+
+        if (!boton) return;
+
+        const detalleRaw = boton.getAttribute("data-detalle");
+
+        if (!detalleRaw) return;
+
+        let detalle;
+
+        try {
+            detalle = JSON.parse(detalleRaw);
+        } catch (error) {
+            console.error("No se pudo cargar el detalle:", error);
+            return;
+        }
+
+        const posicion = document.getElementById(
+            "modalClasificacionPosicion"
+        );
+
+        if (detalle.posicion === 1) {
+            posicion.textContent = "🥇";
+        } else if (detalle.posicion === 2) {
+            posicion.textContent = "🥈";
+        } else if (detalle.posicion === 3) {
+            posicion.textContent = "🥉";
+        } else {
+            posicion.innerHTML = `
+                <span class="badge bg-secondary badge-posicion-modal">
+                    ${detalle.posicion}
+                </span>
+            `;
+        }
+
+        document.getElementById(
+            "modalClasificacionNombre"
+        ).textContent = detalle.nombre;
+
+        document.getElementById(
+            "modalClasificacionPuntos"
+        ).textContent = `${detalle.puntos} puntos`;
+
+        const equiposContenedor = document.getElementById(
+            "modalClasificacionEquipos"
+        );
+
+        equiposContenedor.innerHTML = detalle.equipos.map(function (equipo) {
+            let claseEstado = "";
+
+            if (equipo.eliminado) {
+                claseEstado = "equipo-eliminado";
+            } else if (equipo.pendiente) {
+                claseEstado = "equipo-pendiente-fase";
+            }
+
+            return `
+                <div
+                    class="modal-equipo ${claseEstado}"
+                    title="${escaparHtml(equipo.nombre)}"
+                >
+                    <img
+                        src="https://flagcdn.com/w20/${equipo.flag}.png"
+                        alt="${escaparHtml(equipo.nombre)}"
+                    >
+                    ${escaparHtml(equipo.codigo)}
+                </div>
+            `;
+        }).join("");
+
+        const goleador = detalle.goleador;
+        let claseGoleador = "";
+
+        if (goleador.eliminado) {
+            claseGoleador = "equipo-eliminado";
+        } else if (goleador.pendiente) {
+            claseGoleador = "equipo-pendiente-fase";
+        }
+
+        document.getElementById(
+            "modalClasificacionGoleador"
+        ).innerHTML = `
+            <div class="${claseGoleador}">
+                <img
+                    src="https://flagcdn.com/w20/${goleador.flag}.png"
+                    alt="${escaparHtml(goleador.equipo)}"
+                >
+                ${escaparHtml(goleador.nombre)}
+            </div>
+        `;
+
+        const pendientes = document.getElementById(
+            "modalClasificacionPendientes"
+        );
+
+        if (detalle.pendientes_detalle.length > 0) {
+            pendientes.innerHTML = `
+                <div class="small fw-bold text-danger text-center mb-2">
+                    Aún por jugar en esta fase
+                </div>
+
+                <div class="text-center">
+                    ${detalle.pendientes_detalle.map(function (pendiente) {
+                        return `
+                            <span class="badge badge-pendiente-fase">
+                                ${escaparHtml(pendiente)}
+                            </span>
+                        `;
+                    }).join("")}
+                </div>
+            `;
+        } else {
+            pendientes.innerHTML = `
+                <div class="small fw-bold text-success text-center">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Todas las selecciones y el goleador han jugado.
+                </div>
+            `;
+        }
+    });
+});
+</script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
